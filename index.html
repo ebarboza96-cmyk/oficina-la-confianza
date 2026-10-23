@@ -1,0 +1,2031 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oficina La Confianza</title>
+<style>
+:root { color-scheme:dark; }
+html, body { margin:0; height:100%; overflow:hidden; background:#0f1320; font-family:"Segoe UI", Calibri, Arial, sans-serif; }
+#barra { position:fixed; top:0; left:0; right:0; z-index:5; display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+         padding:calc(8px + env(safe-area-inset-top, 0px)) 14px 8px; background:linear-gradient(180deg, rgba(10,13,22,.92), rgba(10,13,22,.55)); color:#e8ecf3; }
+#estado.viejo { color:#fbbf24; font-weight:700; }
+#barra b { font-size:17px; margin-right:6px; }
+#estado { color:#b9c3d3; font-size:13.5px; margin-right:auto; }
+button { background:rgba(255,255,255,.1); color:#e8ecf3; border:1px solid rgba(255,255,255,.18); border-radius:999px;
+         padding:5px 11px; font-size:13px; cursor:pointer; }
+button:hover { background:rgba(255,255,255,.2); }
+button.activo { background:#2563eb; border-color:#2563eb; }
+a { color:#9cc3ff; text-decoration:none; font-weight:600; font-size:13.5px; }
+#globos { position:fixed; inset:0; pointer-events:none; z-index:3; }
+.globo { position:absolute; transform:translate(-50%, -100%); background:#fff; color:#111827; border-radius:12px;
+         padding:6px 10px; font-size:12.5px; font-weight:600; max-width:240px; text-align:center; line-height:1.25;
+         box-shadow:0 4px 14px rgba(0,0,0,.35); border:2px solid var(--c); }
+.globo:after { content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
+               border:7px solid transparent; border-top-color:var(--c); border-bottom:0; }
+.globo.problema { background:#fee2e2; } .globo.esperando { background:#fef3c7; }
+.globo small { display:block; font-weight:500; color:#4b5563; margin-top:2px; }
+#ayuda { position:fixed; bottom:10px; left:14px; color:#c7cfdb; font-size:12px; z-index:4; text-shadow:0 1px 2px #000; }
+#cargando { position:fixed; inset:0; display:grid; place-items:center; color:#e8ecf3; font-size:18px; z-index:10; background:#0f1320; }
+#bPres { background:#2563eb; border-color:#2563eb; font-weight:700; }
+#presentacion { position:fixed; inset:0; z-index:20; display:none; flex-direction:column; overflow:auto; color:#f1f5f9;
+                background:linear-gradient(135deg, #0b1530, #13244a); }
+#presCerrar { position:fixed; top:12px; right:14px; font-size:15px; z-index:2; }
+#diapo { width:min(1400px, 100%); margin:0 auto; padding:clamp(16px, 3vw, 40px) clamp(16px, 4vw, 56px) 110px; box-sizing:border-box; }
+.d-cab { display:flex; gap:clamp(10px, 2vw, 22px); align-items:center; margin-bottom:clamp(16px, 3vh, 32px); padding-right:190px; }
+.d-ico { font-size:clamp(36px, 6vw, 72px); line-height:1; }
+.d-tit { font-size:clamp(22px, 4.2vw, 54px); font-weight:800; line-height:1.1; }
+.d-sub { color:#93c5fd; font-size:clamp(13px, 1.8vw, 26px); margin-top:4px; }
+.d-tarjetas { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap:clamp(10px, 2vw, 26px); }
+.d-tarjeta { background:rgba(255,255,255,.07); border-radius:18px; padding:clamp(14px, 2.4vw, 30px); }
+.d-tarjeta.malo { background:rgba(220,38,38,.25); } .d-tarjeta.bien { background:rgba(22,163,74,.2); }
+.d-tarjeta span { color:#cbd5e1; font-size:clamp(14px, 1.9vw, 28px); font-weight:600; }
+.d-tarjeta b { display:block; font-size:clamp(26px, 4.4vw, 60px); margin-top:6px; }
+.d-tarjeta.malo b { color:#fca5a5; } .d-tarjeta.bien b { color:#86efac; }
+.d-tarjetas.chicas { grid-template-columns:repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap:clamp(8px, 1.4vw, 18px); }
+.d-tarjetas.chicas .d-tarjeta { padding:clamp(10px, 1.4vw, 20px); border-radius:14px; }
+.d-tarjetas.chicas span { font-size:clamp(13px, 1.4vw, 22px); }
+.d-tarjetas.chicas b { font-size:clamp(18px, 2.1vw, 32px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }   /* un renglón, como en la pared */
+.d-tarjetas.chicas + .d-cuerpo .d-tabla table { font-size:clamp(13px, 1.6vw, 26px); }
+.d-barra { height:clamp(16px, 3vw, 40px); background:rgba(255,255,255,.12); border-radius:99px; overflow:hidden; }
+.d-barra div { height:100%; background:#a78bfa; border-radius:99px; } .d-barra div.lleno { background:#22c55e; }
+.d-barra-txt { font-size:clamp(15px, 2.3vw, 32px); font-weight:700; margin:10px 0 clamp(16px, 3vh, 30px); }
+.d-cuerpo { display:flex; flex-wrap:wrap; gap:clamp(14px, 3vw, 44px); align-items:flex-start; }
+.d-grande b { display:block; font-size:clamp(64px, 10vw, 150px); font-weight:800; line-height:1; }
+.d-grande span { color:#93c5fd; font-size:clamp(14px, 1.9vw, 28px); font-weight:600; }
+.d-tabla { flex:1 1 420px; min-width:0; overflow-x:auto; }
+.d-tabla table { width:100%; border-collapse:collapse; font-size:clamp(13px, 1.9vw, 30px); }
+.d-tabla th { color:#64748b; text-transform:uppercase; font-size:.78em; text-align:left; padding:.35em .6em; }
+.d-tabla td { padding:.45em .6em; white-space:nowrap; } .d-tabla td.largo { white-space:normal; min-width:7em; }
+.d-tabla tbody tr:nth-child(odd) td { background:rgba(255,255,255,.08); }
+.d-tabla tr.total td { background:rgba(96,165,250,.22); font-weight:700; }
+.d-tabla td:first-child { color:#bfdbfe; font-weight:700; white-space:nowrap; }
+.d-tabla td.vacio { color:#86efac; font-weight:700; white-space:normal; background:none; }
+.d-tabla td.malo { color:#fca5a5; font-weight:700; } .d-tabla td.bien { color:#86efac; font-weight:700; }
+.d-tarjetas + .d-cuerpo { margin-top:clamp(16px, 3vh, 32px); }
+#presPie { position:fixed; left:0; right:0; bottom:0; padding:10px 14px 0; background:linear-gradient(0deg, rgba(8,14,32,.95), rgba(8,14,32,0)); }
+#presControles { display:flex; gap:10px; align-items:center; justify-content:center; padding-bottom:10px; }
+#presControles button { font-size:18px; padding:6px 16px; }
+#presPuntos span { display:inline-block; width:10px; height:10px; border-radius:50%; margin:0 4px; background:rgba(255,255,255,.3); }
+#presPuntos span.si { background:#fff; }
+#presBarra { height:6px; background:rgba(255,255,255,.1); margin:0 -14px; } #presAvance { height:100%; width:0; background:#60a5fa; }
+@media (max-width:640px) { #presCerrar span { display:none; } .d-cab { padding-right:44px; } #presPuntos span { width:8px; height:8px; margin:0 3px; }
+                           .d-tabla td.estado { white-space:normal; min-width:5.5em; } }
+/* ---------- Tablero (dashboard): fondo carbón, tarjetas planas, una sola cifra protagonista ---------- */
+#bTablero { background:#0f766e; border-color:#0f766e; font-weight:700; }
+#tablero { position:fixed; inset:0; z-index:21; display:none; overflow:auto; background:#0d0d0d; color:#f0efec;
+           font-family:system-ui, -apple-system, "Segoe UI", sans-serif;
+           --sup:#1a1a19; --tinta:#f0efec; --tinta2:#c3c2b7; --tenue:#898781; --rejilla:#2c2c2a; --eje:#383835;
+           --borde:rgba(255,255,255,.10); --s1:#3987e5; --s2:#d95926; --s3:#199e70; --bien:#0ca30c; --alerta:#fab219; --mal:#e66767; }
+#tablero .tb-in { width:min(1320px, 100%); margin:0 auto; box-sizing:border-box;
+                  padding:calc(18px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 44px max(16px, env(safe-area-inset-left, 0px)); }
+#tbCerrar { position:fixed; top:calc(12px + env(safe-area-inset-top, 0px)); right:14px; z-index:2; }
+#tablero:focus { outline:none; }
+.tb-cab { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 14px; margin:2px 0 6px; padding-right:170px; }
+.tb-cab h1 { margin:0; font-size:clamp(21px, 3vw, 28px); font-weight:650; letter-spacing:-.01em; text-wrap:balance; }
+.tb-cab span { color:var(--tenue); font-size:13px; }
+.tb-sec { margin:26px 2px 10px; color:var(--tinta2); font-size:12px; font-weight:650; letter-spacing:.09em; text-transform:uppercase; }
+.tb-grid { display:grid; gap:12px; grid-template-columns:repeat(12, minmax(0, 1fr)); }
+.tb-c { background:var(--sup); border:1px solid var(--borde); border-radius:14px; padding:16px 18px; min-width:0; grid-column:span 3; }
+.tb-c.w4 { grid-column:span 4; } .tb-c.w6 { grid-column:span 6; } .tb-c.w8 { grid-column:span 8; } .tb-c.w12 { grid-column:span 12; }
+@media (max-width:980px) { .tb-c, .tb-c.w4, .tb-c.w6.par { grid-column:span 6; } .tb-c.w6, .tb-c.w8 { grid-column:span 12; } }
+@media (max-width:560px) { .tb-c, .tb-c.w4, .tb-c.w6, .tb-c.w6.par, .tb-c.w8 { grid-column:span 12; } .tb-cab { padding-right:52px; } #tbCerrar span { display:none; } }
+.tb-et { color:var(--tinta2); font-size:13.5px; font-weight:550; }
+.tb-v { font-size:clamp(25px, 3vw, 31px); font-weight:650; margin-top:6px; letter-spacing:-.01em; line-height:1.1; }
+.tb-heroe .tb-v { font-size:clamp(42px, 5.6vw, 60px); }
+.tb-d { font-size:12.5px; color:var(--tenue); margin-top:7px; line-height:1.35; }
+.tb-d b { font-weight:650; } .tb-d b.sube { color:#3ccf3c; } .tb-d b.baja { color:var(--mal); }
+.tb-graf { margin-top:10px; position:relative; }
+.tb-graf svg { display:block; width:100%; height:auto; overflow:visible; }
+.tb-graf text { font-family:inherit; }
+.tb-ley { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:12.5px; color:var(--tinta2); margin-top:8px; }
+.tb-ley i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; vertical-align:-1px; }
+.tb-tabla { margin-top:10px; }
+.tb-tabla summary { cursor:pointer; color:var(--tenue); font-size:12.5px; width:max-content; }
+.tb-tabla summary:focus-visible { outline:2px solid var(--s1); outline-offset:3px; border-radius:4px; }
+.tb-tabla div { overflow-x:auto; }
+.tb-tabla table { width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; font-variant-numeric:tabular-nums; }
+.tb-tabla th, .tb-tabla td { padding:5px 6px; border-bottom:1px solid var(--rejilla); text-align:right; white-space:nowrap; }
+.tb-tabla th { color:var(--tenue); font-weight:600; } .tb-tabla th:first-child, .tb-tabla td:first-child { text-align:left; }
+.tb-chip { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:650; padding:3px 10px; border-radius:99px; background:rgba(255,255,255,.07); }
+.tb-chip.ok { color:#3ccf3c; } .tb-chip.mal { color:var(--mal); } .tb-chip.sob { color:var(--alerta); }
+.tb-lista { list-style:none; margin:10px 0 0; padding:0; font-size:13.5px; }
+.tb-lista li { display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid var(--rejilla); }
+.tb-lista li span:last-child { color:var(--tinta2); text-align:right; font-variant-numeric:tabular-nums; }
+.tb-medidor { height:10px; border-radius:99px; background:#184f95; margin-top:12px; overflow:hidden; }
+.tb-medidor div { height:100%; border-radius:99px; background:var(--s1); }
+.tb-medidor.lleno div { background:var(--bien); }
+.tb-aviso { color:var(--tinta2); font-size:14px; line-height:1.5; margin:8px 0 0; max-width:65ch; }
+.tb-aviso code { background:rgba(255,255,255,.08); padding:1px 6px; border-radius:5px; }
+#tbTip { position:fixed; pointer-events:none; z-index:30; background:#262624; color:#f0efec; border:1px solid rgba(255,255,255,.12);
+         border-radius:8px; padding:6px 10px; font:12.5px system-ui, "Segoe UI", sans-serif; display:none; box-shadow:0 8px 20px rgba(0,0,0,.45); white-space:nowrap; }
+#tbTip b { font-weight:650; }
+@media (prefers-reduced-motion: reduce) { #tablero * { transition:none !important; } }
+/* ---------- Pruebas y pendientes: lo que hay que probar, lo que te toca y lo que viene (misma estética del tablero) ---------- */
+#bPruebas { position:relative; background:#6d28d9; border-color:#6d28d9; font-weight:700; }
+#bPruebas .n { position:absolute; top:-7px; right:-6px; min-width:19px; height:19px; padding:0 5px; box-sizing:border-box; border-radius:99px;
+               background:#ef4444; color:#fff; font-size:11.5px; font-weight:800; line-height:19px; text-align:center; box-shadow:0 0 0 2px #0f1320; }
+#bPruebas .n[hidden] { display:none; }
+#pruebas { position:fixed; inset:0; z-index:22; display:none; overflow:auto; overscroll-behavior:contain; background:#0d0d0d; color:#f0efec;
+           font-family:system-ui, -apple-system, "Segoe UI", sans-serif;
+           --sup:#1a1a19; --tinta:#f0efec; --tinta2:#c3c2b7; --tenue:#898781; --rejilla:#2c2c2a; --borde:rgba(255,255,255,.10);
+           --probar:#a78bfa; --toca:#fab219; --claude:#3987e5; --bien:#3ccf3c; --mal:#e66767; }
+#pruebas:focus { outline:none; }
+#prCerrar { position:fixed; top:calc(12px + env(safe-area-inset-top, 0px)); right:14px; z-index:2; }
+.pr-in { width:min(820px, 100%); margin:0 auto; box-sizing:border-box;
+         padding:calc(18px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 56px max(16px, env(safe-area-inset-left, 0px)); }
+.pr-cab { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 14px; margin:2px 0 14px; padding-right:180px; }
+.pr-cab h1 { margin:0; font-size:clamp(22px, 3vw, 28px); font-weight:650; letter-spacing:-.01em; text-wrap:balance; }
+.pr-cab span { color:var(--tenue); font-size:13px; }
+.pr-ayuda { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; background:var(--sup); border:1px solid var(--borde); border-radius:14px;
+            padding:12px 14px 12px 16px; color:var(--tinta2); font-size:14px; line-height:1.5; }
+.pr-ayuda p { margin:0; flex:1 1 300px; text-wrap:pretty; }
+.pr-ayuda a { flex:none; display:inline-flex; align-items:center; min-height:40px; padding:0 16px; border-radius:99px; background:#2563eb; color:#fff; font-size:14px; }
+.pr-ayuda a:focus-visible, .pr-hecho summary:focus-visible { outline:2px solid var(--claude); outline-offset:3px; }
+.pr-sec { display:flex; align-items:center; gap:10px; margin:30px 2px 4px; font-size:17px; font-weight:650; }
+.pr-cuantos { min-width:22px; padding:1px 8px; box-sizing:border-box; border-radius:99px; background:rgba(255,255,255,.09); color:var(--tinta2);
+              font-size:12.5px; font-weight:700; text-align:center; font-variant-numeric:tabular-nums; }
+.pr-pista { margin:0 2px 12px; color:var(--tenue); font-size:13px; }
+.pr-lista { display:grid; gap:10px; }
+.pr-c { background:var(--sup); border:1px solid var(--borde); border-left:4px solid var(--acento, var(--tenue)); border-radius:14px; padding:14px 16px; min-width:0; }
+.pr-c.probar { --acento:var(--probar); } .pr-c.te_toca { --acento:var(--toca); } .pr-c.voy_a_hacer { --acento:var(--claude); }
+.pr-c.fallo { --acento:var(--mal); border-color:rgba(230,103,103,.5); background:linear-gradient(rgba(230,103,103,.08), rgba(230,103,103,.08)), var(--sup); }
+.pr-arriba { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+.pr-id { font-size:13px; font-weight:750; font-variant-numeric:tabular-nums; background:rgba(255,255,255,.09); border-radius:7px; padding:2px 8px; }
+.pr-tema { color:var(--tinta2); font-size:12.5px; }
+.pr-est { margin-left:auto; font-size:12.5px; font-weight:650; padding:3px 10px; border-radius:99px; background:rgba(255,255,255,.07); color:var(--tinta2); white-space:nowrap; }
+.pr-est.en_curso { color:var(--toca); background:rgba(250,178,25,.12); }
+.pr-est.funciono, .pr-est.hecho { color:var(--bien); background:rgba(60,207,60,.12); }
+.pr-est.fallo { color:#ffb4b4; background:rgba(230,103,103,.22); } .pr-est.descartado { color:var(--tenue); }
+.pr-c h3 { margin:8px 0 0; font-size:16.5px; font-weight:650; line-height:1.3; overflow-wrap:anywhere; text-wrap:pretty; }
+.pr-det { margin:6px 0 0; color:var(--tinta2); font-size:14px; line-height:1.5; white-space:pre-line; overflow-wrap:anywhere; max-width:68ch; }
+.pr-pasos { list-style:none; margin:12px 0 0; padding:0; border-top:1px solid var(--rejilla); counter-reset:paso; }
+.pr-pasos li { border-bottom:1px solid var(--rejilla); counter-increment:paso; }
+.pr-pasos label { display:flex; gap:12px; align-items:flex-start; padding:10px 2px; cursor:pointer; font-size:14.5px; line-height:1.4; overflow-wrap:anywhere; }
+.pr-pasos input { flex:none; width:20px; height:20px; margin:0; accent-color:var(--acento); cursor:pointer; }
+.pr-pasos input:checked + span { color:var(--tenue); text-decoration:line-through; text-decoration-color:rgba(255,255,255,.35); }
+.pr-pasos.plano li { display:flex; gap:10px; padding:8px 2px; font-size:14px; line-height:1.4; color:var(--tinta2); overflow-wrap:anywhere; }
+.pr-pasos.plano li:before { content:counter(paso) "."; flex:none; min-width:1.4em; color:var(--tenue); font-variant-numeric:tabular-nums; }
+.pr-avance { margin-top:8px; color:var(--tenue); font-size:12.5px; } .pr-avance.listo { color:var(--bien); }
+.pr-nota { margin:10px 0 0; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,.05); color:var(--tinta2); font-size:14px; line-height:1.45;
+           white-space:pre-line; overflow-wrap:anywhere; }
+.pr-c.fallo .pr-nota { background:rgba(230,103,103,.14); color:#ffd6d6; }
+.pr-fecha { margin-top:6px; color:var(--tenue); font-size:12px; }
+.pr-c.cerrada { padding:11px 14px; } .pr-c.cerrada h3 { margin-top:6px; font-size:15px; color:var(--tinta2); }
+.pr-hecho { margin-top:30px; }
+.pr-hecho summary { display:flex; align-items:center; gap:10px; list-style:none; cursor:pointer; margin:0 2px 10px; font-size:17px; font-weight:650; width:max-content; max-width:100%; }
+.pr-hecho summary::-webkit-details-marker { display:none; }
+.pr-hecho summary:after { content:"›"; color:var(--tenue); font-size:20px; line-height:1; transition:transform .15s; }
+.pr-hecho[open] summary:after { transform:rotate(90deg); }
+.pr-vacio { margin-top:18px; padding:30px 18px; text-align:center; background:var(--sup); border:1px dashed var(--borde); border-radius:14px; color:var(--tinta2); font-size:15.5px; }
+.pr-vacio b { display:block; font-size:34px; margin-bottom:6px; }
+@media (max-width:560px) { .pr-cab { padding-right:52px; } #prCerrar span { display:none; } .pr-c { padding:13px 14px; } }
+@media (prefers-reduced-motion: reduce) { .pr-hecho summary:after { transition:none; } }
+</style></head><body>
+<div id="cargando">Abriendo la oficina…</div>
+<div id="barra"><b>🏢 La oficina</b><span id="estado"></span><span id="botones"></span>
+  <button id="bTablero">📊 Tablero</button><button id="bPruebas" aria-haspopup="dialog" title="Lo que hay que probar y lo que te toca">🧪 Pruebas<span class="n" id="pruebasN" hidden></span></button><button id="bPres">📺 Presentación</button><button id="bVista">🎥 Vista general</button><button id="bPlanta">🔪 Deshuese</button><button id="bDemo">🎬 Demo</button><a id="aNumeros" href="Panel.html">📊 Números</a>
+  <a id="aClaude" href="https://claude.ai/code" target="_blank" rel="noopener">💬 Pedirle algo a Claude</a></div>
+<div id="presentacion"><button id="presCerrar">✕<span> Volver a la oficina</span></button><div id="diapo"></div>
+  <div id="presPie"><div id="presControles"><button id="presAnt" title="Anterior">‹</button><span id="presPuntos"></span>
+    <button id="presPausa" title="Pausar">⏸</button><button id="presSig" title="Siguiente">›</button></div><div id="presBarra"><div id="presAvance"></div></div></div></div>
+<div id="tablero" role="dialog" aria-label="Tablero"><button id="tbCerrar">✕<span> Volver a la oficina</span></button><div class="tb-in" id="tbCuerpo"></div></div>
+<div id="pruebas" role="dialog" aria-modal="true" aria-labelledby="prTitulo" tabindex="-1"><button id="prCerrar">✕<span> Volver a la oficina</span></button><div class="pr-in" id="prCuerpo"></div></div>
+<div id="tbTip"></div>
+<div id="globos"></div>
+<div id="ayuda">Arrastrá para girar · rueda para acercar · clic en un agente para seguirlo</div>
+<script>// Puerta con PIN de la oficina en internet (la arma publicar_web.py dentro de index.html).
+// La página es pública pero no trae datos: llegan en datos.enc, cifrados con AES-GCM y una clave
+// que sale del PIN (PBKDF2-SHA256). Sin el PIN correcto no se puede leer nada.
+(() => {
+  const GUARDADA = "oficina-clave";            // la clave (nunca el PIN) si marcan "recordar"
+  let clave = null, sal = "", ultimoIv = "", entregar;
+  window.PANEL_PROMESA = new Promise(r => { entregar = r; });
+
+  const deB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const aB64 = b => { let s = ""; for (const x of new Uint8Array(b)) s += String.fromCharCode(x); return btoa(s); };
+  const leer = k => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch { return null; } };
+  const guardar = (k, v) => { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
+  async function traer() {
+    const r = await fetch("datos.enc?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) throw new Error("No encontré los datos (" + r.status + ")");
+    return r.json();
+  }
+  async function derivar(pin, paquete) {
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({ name: "PBKDF2", salt: deB64(paquete.sal), iterations: paquete.vueltas, hash: "SHA-256" },
+                                   base, { name: "AES-GCM", length: 256 }, true, ["decrypt"]);
+  }
+  async function abrir(paquete, k) {
+    const claro = await crypto.subtle.decrypt({ name: "AES-GCM", iv: deB64(paquete.iv) }, k, deB64(paquete.datos));
+    return JSON.parse(new TextDecoder().decode(claro));
+  }
+  function listo(panel, paquete, k) {
+    if (!capa.isConnected) return;   // ya había entrado (PIN escrito y reintento automático a la vez)
+    clave = k; sal = paquete.sal; ultimoIv = paquete.iv;
+    window.PANEL = panel; capa.remove(); entregar(panel);
+    setInterval(refrescar, 120000);   // los datos nuevos llegan cada 15 minutos más o menos
+    // "Salir": olvida este aparato (para cuando entraron desde una compu prestada)
+    const salir = document.createElement("button");
+    salir.textContent = "🔒 Salir"; salir.title = "Cerrar y olvidar el PIN en este aparato";
+    salir.onclick = () => { guardar(GUARDADA, null); location.reload(); };
+    document.getElementById("barra")?.appendChild(salir);
+  }
+  async function refrescar() {
+    try {
+      const p = await traer();
+      if (p.iv === ultimoIv) return;
+      if (p.sal !== sal) { guardar(GUARDADA, null); location.reload(); return; }   // cambiaron el PIN
+      window.PANEL = await abrir(p, clave); ultimoIv = p.iv;
+      window.alLlegarDatos?.();
+    } catch { /* sin internet un rato: se vuelve a intentar en 2 minutos */ }
+  }
+
+  // ---------- la pantalla del PIN ----------
+  const capa = document.createElement("div");
+  capa.id = "puerta";
+  capa.innerHTML = `<style>
+    #puerta { position:fixed; inset:0; z-index:40; display:grid; place-items:center; padding:16px;
+              background:radial-gradient(circle at 50% 30%, #1d2b4f, #0b1020 70%); color:#e8ecf3;
+              font-family:"Segoe UI", Calibri, Arial, sans-serif; }
+    #puerta form { width:min(340px, 100%); display:flex; flex-direction:column; gap:14px; text-align:center; }
+    #puerta h1 { margin:0; font-size:26px; } #puerta p { margin:0; color:#b9c3d3; font-size:14.5px; }
+    #puerta .logo { font-size:54px; line-height:1; }
+    #puerta input[type=password] { font-size:30px; letter-spacing:.35em; text-align:center; padding:12px; border-radius:14px;
+              border:2px solid #334155; background:#0f172a; color:#fff; outline:none; }
+    #puerta input[type=password]:focus { border-color:#60a5fa; }
+    #puerta button { font-size:18px; font-weight:700; padding:12px; border-radius:14px; border:0; background:#2563eb; color:#fff; cursor:pointer; }
+    #puerta button:disabled { opacity:.6; cursor:wait; }
+    #puerta label { display:flex; gap:8px; align-items:center; justify-content:center; color:#b9c3d3; font-size:14px; }
+    #puerta .error { color:#fca5a5; font-weight:700; min-height:1.3em; }
+  <\/style>
+  <form autocomplete="off">
+    <div class="logo">🏢<\/div><h1>La oficina<\/h1><p>Escribí el PIN para entrar<\/p>
+    <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" aria-label="PIN" required>
+    <label><input id="recordar" type="checkbox"> Recordar en este aparato<\/label>
+    <button id="entrar">Entrar<\/button><div class="error" id="errorPin" role="alert"><\/div>
+  <\/form>`;
+  document.body.appendChild(capa);
+  const form = capa.querySelector("form"), boton = capa.querySelector("#entrar"), error = capa.querySelector("#errorPin");
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const pin = capa.querySelector("#pin").value.trim();
+    if (!pin) return;
+    boton.disabled = true; boton.textContent = "Abriendo…"; error.textContent = "";
+    try {
+      const paquete = await traer(), k = await derivar(pin, paquete);
+      let panel;
+      try { panel = await abrir(paquete, k); }
+      catch { error.textContent = "PIN incorrecto"; capa.querySelector("#pin").select(); return; }
+      if (capa.querySelector("#recordar").checked) guardar(GUARDADA, { sal: paquete.sal, k: aB64(await crypto.subtle.exportKey("raw", k)) });
+      listo(panel, paquete, k);
+    } catch (err) {
+      error.textContent = "No pude abrir la oficina: " + err.message;
+    } finally { boton.disabled = false; boton.textContent = "Entrar"; }
+  });
+
+  // ¿ya entró antes en este aparato? Entonces no pide el PIN otra vez. La clave guardada solo se
+  // borra si de verdad ya no sirve (cambiaron el PIN); si es que no hay internet, se reintenta.
+  async function entrarSolo() {
+    const g = leer(GUARDADA);
+    if (!g || !capa.isConnected) return;
+    let paquete;
+    try { paquete = await traer(); }
+    catch {
+      error.textContent = "Sin conexión con la oficina, reintentando…";
+      setTimeout(entrarSolo, 15000); return;
+    }
+    try {
+      if (paquete.sal !== g.sal) throw new Error("PIN nuevo");
+      const k = await crypto.subtle.importKey("raw", deB64(g.k), { name: "AES-GCM" }, true, ["decrypt"]);
+      listo(await abrir(paquete, k), paquete, k);
+    } catch { guardar(GUARDADA, null); error.textContent = ""; capa.querySelector("#pin").focus(); }
+  }
+  capa.querySelector("#pin").focus();
+  entrarSolo();
+  addEventListener("online", entrarSolo);
+})();
+</script>
+<script type="importmap">{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+
+// En línea la página no puede leer agentes.js: en el link de claude.ai los datos llegan de la base de
+// datos del artifact, y en GitHub Pages llegan cifrados y se abren con el PIN (puerta_pin.js). En los
+// dos casos se usa la hora de Costa Rica aunque quien mire esté de viaje en otro país.
+const enClaude = typeof window.claude?.use === "function", enWeb = !!window.PANEL_PROMESA, enLinea = enClaude || enWeb;
+if (enWeb) await window.PANEL_PROMESA;   // la oficina se arma cuando ya entraron con el PIN
+const horaCR = () => new Date(Date.now() + (new Date().getTimezoneOffset() - 360) * 60000);
+const fechaCR = s => new Date(/[zZ]|[+-]\d\d:\d\d$/.test(s) ? s : s + "-06:00");   // las horas sin zona son de Costa Rica
+const HORA = { hour: "2-digit", minute: "2-digit", timeZone: "America/Costa_Rica" };
+if (enLinea) document.getElementById("aNumeros").hidden = true;
+
+// =====================================================================================
+//  Escena
+// =====================================================================================
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+scene.background = new THREE.Color("#1a2133");
+scene.fog = new THREE.Fog("#1a2133", 42, 90);
+const CENTRO_X = 5.5;   // la oficina (x -11..11) más la sala de deshuese (x 11..22)
+const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 200);
+// En el celular parado el edificio (largo) no cabe de lado: se mira desde la punta de la sala de deshuese,
+// a lo largo, y así llena la pantalla de arriba a abajo.
+const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const VISTA = { pos: V3(CENTRO_X + 19, 20, 23), mira: V3(CENTRO_X, 0, 0), cel: { pos: V3(CENTRO_X + 25, 30, 0), mira: V3(CENTRO_X, 0, -1.5) } };
+const VISTA_PLANTA = { pos: V3(25.5, 9.5, 12.3), mira: V3(16.4, 0.6, -1.0), cel: { pos: V3(25.5, 10, 0.8), mira: V3(15.6, 0.8, -3.4) } };
+function encuadre(v) {
+  const angosta = camera.aspect < 0.8, b = angosta ? v.cel : v;
+  const k = angosta ? Math.min(1.6, Math.max(1, 0.75 / camera.aspect)) : Math.min(2.4, Math.max(1, 1.3 / camera.aspect));
+  return { pos: b.mira.clone().add(b.pos.clone().sub(b.mira).multiplyScalar(k)), mira: b.mira.clone() };
+}
+function ajustarNiebla() { const v = encuadre(VISTA), d = v.pos.distanceTo(v.mira); scene.fog.near = d * 1.15; scene.fog.far = d * 2.5; }
+const inicio = encuadre(VISTA);
+camera.position.copy(inicio.pos); ajustarNiebla();
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(inicio.mira); controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.47;
+controls.minDistance = 5; controls.maxDistance = 95;
+addEventListener("resize", () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); ajustarNiebla(); });
+
+// Luces: el sol se mueve con la hora real; de noche se prenden las lámparas.
+const hemi = new THREE.HemisphereLight("#dbe8ff", "#7a5c3e", 0.35); scene.add(hemi);
+const sol = new THREE.DirectionalLight("#fff3dc", 1.6);
+sol.castShadow = true; sol.shadow.mapSize.set(2048, 2048);
+Object.assign(sol.shadow.camera, { left: -21, right: 21, top: 15, bottom: -15, near: 1, far: 80 });
+sol.shadow.bias = -0.0004; scene.add(sol); scene.add(sol.target); sol.target.position.set(CENTRO_X, 0, 0);
+const lamparas = [];
+for (const [x, z] of [[-5, -1], [1, -1], [6, 2], [-6, 4.5]]) {
+  const l = new THREE.PointLight("#ffd9a0", 0, 14, 1.6); l.position.set(x, 4.2, z); scene.add(l); lamparas.push(l);
+  const foco = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 0.18, 24), new THREE.MeshStandardMaterial({ color: "#f8fafc", emissive: "#ffe6b3", emissiveIntensity: 0 }));
+  foco.position.set(x, 4.3, z); scene.add(foco); l.userData.foco = foco;
+  const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.2, 6), new THREE.MeshStandardMaterial({ color: "#475569" }));
+  cable.position.set(x, 5, z); scene.add(cable);
+}
+
+// ---------- Utilidades ----------
+const M = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.75, metalness: 0.05, ...extra });
+function caja(w, h, d, mat, x, y, z, padre = scene) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z);
+  m.castShadow = m.receiveShadow = true; padre.add(m); return m;
+}
+function cilindro(rt, rb, h, mat, x, y, z, padre = scene, seg = 20) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat); m.position.set(x, y, z);
+  m.castShadow = m.receiveShadow = true; padre.add(m); return m;
+}
+function lienzo(w, h, dibujar) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d");
+  dibujar(g, w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  t.userData = { c, g }; return t;
+}
+function cartel(texto, color = "#1F4E78", fondo = "rgba(255,255,255,.92)", ancho = 256) {
+  const t = lienzo(ancho, 64, (g, w, h) => {
+    g.fillStyle = fondo; g.beginPath(); g.roundRect(4, 8, w - 8, h - 16, 24); g.fill();
+    g.fillStyle = color; g.font = "800 30px Segoe UI, Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(texto, w / 2, h / 2 + 1);
+  });
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false })); s.scale.set(ancho / 160, 0.4, 1); s.renderOrder = 10; return s;
+}
+function emoji(e, tam = 0.6) {
+  const t = lienzo(128, 128, g => { g.font = "96px Segoe UI Emoji, Apple Color Emoji, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(e, 64, 72); });
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true })); s.scale.set(tam, tam, 1); s.renderOrder = 11; s.userData.e = e; return s;
+}
+function cambiarEmoji(s, e) {
+  if (s.userData.e === e) return; s.userData.e = e; const { g } = s.material.map.userData;
+  g.clearRect(0, 0, 128, 128); g.font = "96px Segoe UI Emoji, Apple Color Emoji, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(e, 64, 72); s.material.map.needsUpdate = true;
+}
+
+// =====================================================================================
+//  El edificio
+// =====================================================================================
+const ANCHO = 22, FONDO = 15;           // x: -11..11, z: -7.5..7.5
+const piso = lienzo(1024, 1024, (g, w, h) => {
+  for (let y = 0; y < 16; y++) for (let x = -1; x < 8; x++) {
+    const tono = 150 + ((x * 7 + y * 13) % 5) * 9;
+    g.fillStyle = `rgb(${tono + 40},${tono + 8},${tono - 40})`; g.fillRect(x * 128 + (y % 2) * 64, y * 64, 128, 64);
+    g.strokeStyle = "rgba(80,50,20,.35)"; g.strokeRect(x * 128 + (y % 2) * 64, y * 64, 128, 64);
+    for (let k = 0; k < 6; k++) { g.strokeStyle = "rgba(90,60,30,.12)"; g.beginPath(); const yy = y * 64 + 8 + k * 9; g.moveTo(x * 128 + (y % 2) * 64, yy); g.lineTo(x * 128 + (y % 2) * 64 + 128, yy + Math.sin(k) * 3); g.stroke(); }
+  }
+});
+piso.wrapS = piso.wrapT = THREE.RepeatWrapping; piso.repeat.set(2.5, 2);
+const suelo = new THREE.Mesh(new THREE.PlaneGeometry(ANCHO, FONDO), M("#ffffff", { map: piso, roughness: 0.55 }));
+suelo.rotation.x = -Math.PI / 2; suelo.receiveShadow = true; scene.add(suelo);
+// paredes (atrás y a la izquierda) con zócalo
+const pared = M("#ece6db");
+caja(ANCHO, 4.8, 0.3, pared, 0, 2.4, -FONDO / 2 - 0.15);
+caja(0.3, 4.8, FONDO, pared, -ANCHO / 2 - 0.15, 2.4, 0);
+caja(ANCHO, 0.25, 0.32, M("#8a6f55"), 0, 0.12, -FONDO / 2 - 0.1);
+caja(0.32, 0.25, FONDO, M("#8a6f55"), -ANCHO / 2 - 0.1, 0.12, 0);
+// ventanas con cielo que cambia con la hora
+const cieloTex = lienzo(256, 128, () => {});
+const vidrio = M("#ffffff", { map: cieloTex, emissive: "#ffffff", emissiveMap: cieloTex, emissiveIntensity: 0.9, roughness: 0.2 });
+for (const x of [1.5, 5, 8.5]) {
+  caja(2.8, 1.9, 0.05, vidrio, x, 2.6, -FONDO / 2 + 0.02);
+  caja(3, 0.12, 0.2, M("#6b5843"), x, 1.6, -FONDO / 2 + 0.08); caja(3, 0.12, 0.2, M("#6b5843"), x, 3.6, -FONDO / 2 + 0.08);
+  caja(0.1, 2, 0.2, M("#6b5843"), x, 2.6, -FONDO / 2 + 0.08);
+}
+function pintarCielo(h) {
+  const { g } = cieloTex.userData; const noche = h < 6 || h >= 19, tarde = h >= 17 && h < 19;
+  const gr = g.createLinearGradient(0, 0, 0, 128);
+  if (noche) { gr.addColorStop(0, "#081229"); gr.addColorStop(1, "#1b2a52"); }
+  else if (tarde) { gr.addColorStop(0, "#f59e0b"); gr.addColorStop(1, "#fde68a"); }
+  else { gr.addColorStop(0, "#60a5fa"); gr.addColorStop(1, "#dbeafe"); }
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 128);
+  if (noche) { g.fillStyle = "#fff"; for (let i = 0; i < 25; i++) g.fillRect((i * 97) % 256, (i * 53) % 90, 2, 2); }
+  else { g.fillStyle = "rgba(255,255,255,.85)"; for (const [x, y] of [[50, 40], [170, 60]]) { g.beginPath(); g.ellipse(x, y, 34, 12, 0, 0, 7); g.ellipse(x + 20, y - 8, 22, 12, 0, 0, 7); g.fill(); } }
+  g.fillStyle = "#3f6b3a"; g.fillRect(0, 110, 256, 18); // árboles a lo lejos
+  cieloTex.needsUpdate = true;
+}
+// letrero de la empresa
+const letrero = lienzo(1024, 160, (g, w, h) => {
+  g.fillStyle = "#7f1d1d"; g.beginPath(); g.roundRect(0, 0, w, h, 30); g.fill();
+  g.fillStyle = "#fff"; g.font = "800 78px Segoe UI, Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("🥩 Carnicería La Confianza", w / 2, h / 2 + 4);
+});
+caja(6.4, 1, 0.06, M("#ffffff", { map: letrero }), -6.5, 3.9, -FONDO / 2 + 0.03);
+// reloj de pared con la hora real
+const relojTex = lienzo(256, 256, () => {});
+const reloj = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.08, 40), [M("#334155"), M("#ffffff", { map: relojTex }), M("#334155")]);
+reloj.rotation.x = Math.PI / 2; reloj.position.set(-1.6, 3.9, -FONDO / 2 + 0.05); scene.add(reloj);
+function pintarReloj(d) {
+  const { g } = relojTex.userData; g.save(); g.fillStyle = "#fff"; g.fillRect(0, 0, 256, 256); g.translate(128, 128); g.rotate(Math.PI);
+  g.fillStyle = "#1f2937"; for (let i = 0; i < 12; i++) { g.save(); g.rotate(i * Math.PI / 6); g.fillRect(-3, -112, 6, 18); g.restore(); }
+  const ag = (a, l, w, c) => { g.save(); g.rotate(a); g.fillStyle = c; g.fillRect(-w / 2, -l, w, l); g.restore(); };
+  ag((d.getHours() % 12 + d.getMinutes() / 60) * Math.PI / 6, 62, 9, "#111827");
+  ag(d.getMinutes() * Math.PI / 30, 92, 6, "#111827"); ag(d.getSeconds() * Math.PI / 30, 98, 2, "#dc2626");
+  g.restore(); relojTex.needsUpdate = true;
+}
+// pantallas en la pared: van pasando diapositivas con la situación actual
+const pantallaTex = lienzo(1280, 720, () => {});
+const pantallaGrande = caja(6.2, 3.49, 0.08, M("#ffffff", { map: pantallaTex, emissive: "#ffffff", emissiveMap: pantallaTex, emissiveIntensity: 0.75, roughness: 0.3 }), -10.93, 2.55, -0.8);
+pantallaGrande.rotation.y = Math.PI / 2;
+caja(6.45, 3.72, 0.1, M("#0b0f19", { metalness: 0.4 }), -11.0, 2.55, -0.8).rotation.y = Math.PI / 2;
+const pantalla2Tex = lienzo(1280, 720, () => {});
+const pantallaChica = caja(3.4, 1.91, 0.06, M("#ffffff", { map: pantalla2Tex, emissive: "#ffffff", emissiveMap: pantalla2Tex, emissiveIntensity: 0.75, roughness: 0.3 }), -3.4, 2.3, -FONDO / 2 + 0.06);
+caja(3.6, 2.1, 0.06, M("#0b0f19", { metalness: 0.4 }), -3.4, 2.3, -FONDO / 2 + 0.02);
+
+// =====================================================================================
+//  Muebles
+// =====================================================================================
+const madera = M("#9a6b47", { roughness: 0.6 }), metal = M("#94a3b8", { metalness: 0.6, roughness: 0.35 }), negro = M("#1f2937");
+// Redi va entre los pasillos x = 3.6 y x = 7.6 (le quedan 0.5 m de cada lado, igual que a los demás)
+const ESCRITORIOS = { vigilante: [-6, -3], impresor: [-2.2, -3], produccion: [1.6, -3], facturador: [-6, 1.2], codigos: [-2.2, 1.2], cobros: [1.6, 1.2],
+                      redes: [5.6, 1.2] };
+const pantallas = {}, monitores = {}, tela = M("#c7ced9", { roughness: 0.95 });
+for (const [id, [x, z]] of Object.entries(ESCRITORIOS)) {
+  const ag = (window.PANEL && PANEL.equipo[id]) || { color: "#64748b", nombre: id };
+  // cubículo: mamparas de tela con marco de aluminio y una franja del color del agente
+  caja(2.95, 1.55, 0.07, tela, x, 0.78, z - 0.72); caja(2.95, 0.06, 0.1, metal, x, 1.58, z - 0.72);
+  caja(2.95, 0.12, 0.08, M(ag.color), x, 1.45, z - 0.68);
+  for (const s of [-1, 1]) { caja(0.07, 1.15, 1.45, tela, x + s * 1.47, 0.58, z - 0.05); caja(0.09, 0.05, 1.45, metal, x + s * 1.47, 1.17, z - 0.05); }
+  caja(2.6, 0.08, 1.2, madera, x, 0.78, z);
+  for (const [lx, lz] of [[-1.2, -0.5], [1.2, -0.5], [-1.2, 0.5], [1.2, 0.5]]) caja(0.07, 0.76, 0.07, metal, x + lx, 0.38, z + lz);
+  caja(2.6, 0.05, 0.06, M(ag.color), x, 0.84, z + 0.6);       // borde del color del agente
+  // monitor
+  caja(0.08, 0.35, 0.08, negro, x, 1.0, z - 0.3); caja(0.4, 0.04, 0.25, negro, x, 0.83, z - 0.3);
+  const monTex = lienzo(512, 300, () => {});
+  const pant = caja(1.15, 0.68, 0.05, M("#ffffff", { map: monTex, emissive: "#ffffff", emissiveMap: monTex, emissiveIntensity: 0.5 }), x, 1.42, z - 0.33);
+  caja(1.25, 0.78, 0.04, negro, x, 1.42, z - 0.37); pantallas[id] = pant; monitores[id] = monTex;
+  caja(0.75, 0.03, 0.25, M("#e5e7eb"), x, 0.83, z + 0.1);       // teclado
+  cilindro(0.07, 0.06, 0.14, M(ag.color), x + 0.95, 0.89, z + 0.15); // taza
+  // papeles y planta pequeña
+  caja(0.32, 0.02, 0.42, M("#ffffff"), x - 0.9, 0.83, z + 0.05).rotation.y = 0.2;
+  // silla
+  cilindro(0.04, 0.04, 0.45, metal, x, 0.25, z + 0.95); cilindro(0.3, 0.3, 0.04, negro, x, 0.03, z + 0.95, scene, 5);
+  caja(0.6, 0.1, 0.55, M("#334155"), x, 0.5, z + 0.95); caja(0.6, 0.65, 0.08, M("#334155"), x, 0.85, z + 1.22);
+  // placa con el nombre
+  const placa = cartel(ag.nombre || id, ag.color); placa.position.set(x, 1.15, z + 0.62); placa.scale.multiplyScalar(0.55); scene.add(placa);
+}
+// servidor de Oracle con luces
+const servidor = new THREE.Group(); servidor.position.set(8.9, 0, -6.4); scene.add(servidor);
+caja(1.3, 2.6, 1, M("#1e293b", { metalness: 0.4 }), 0, 1.3, 0, servidor);
+const leds = [];
+for (let i = 0; i < 9; i++) {
+  caja(1.1, 0.18, 0.02, M("#334155"), 0, 0.35 + i * 0.25, 0.51, servidor);
+  for (let k = 0; k < 3; k++) { const l = caja(0.06, 0.06, 0.03, M("#22c55e", { emissive: "#22c55e", emissiveIntensity: 1 }), 0.3 + k * 0.12, 0.35 + i * 0.25, 0.53, servidor); leds.push(l); }
+}
+const oracleCartel = cartel("ORACLE", "#ef4444", "rgba(15,23,42,.9)"); oracleCartel.position.set(0, 2.9, 0); servidor.add(oracleCartel);
+// impresora
+const impresora = new THREE.Group(); impresora.position.set(6.2, 0, -6.4); scene.add(impresora);
+caja(1.6, 0.75, 0.9, madera, 0, 0.375, 0, impresora);
+caja(1.1, 0.42, 0.75, M("#e5e7eb"), 0, 0.96, 0, impresora); caja(0.9, 0.12, 0.5, M("#cbd5e1"), 0, 1.22, -0.05, impresora);
+caja(0.7, 0.03, 0.45, M("#ffffff"), 0, 0.95, 0.55, impresora);
+const ledImp = caja(0.06, 0.06, 0.03, M("#22c55e", { emissive: "#22c55e", emissiveIntensity: 1 }), 0.42, 1.05, 0.38, impresora);
+const epson = cartel("EPSON", "#1d4ed8"); epson.position.set(0, 1.65, 0); epson.scale.multiplyScalar(0.6); impresora.add(epson);
+// buzón de correo
+const buzon = new THREE.Group(); buzon.position.set(10.2, 0, 0); scene.add(buzon);
+cilindro(0.06, 0.06, 1.1, metal, 0, 0.55, 0, buzon);
+caja(0.8, 0.7, 0.6, M("#2563eb", { metalness: 0.3 }), 0, 1.4, 0, buzon); caja(0.5, 0.05, 0.05, M("#1e3a8a"), -0.41, 1.55, 0, buzon).rotation.y = Math.PI / 2;
+const correoCartel = cartel("✉ Correo", "#1e3a8a"); correoCartel.position.set(0, 2.15, 0); correoCartel.scale.multiplyScalar(0.6); buzon.add(correoCartel);
+// mostrador con la caja de QuPOS
+const caja_ = new THREE.Group(); caja_.position.set(6.8, 0, 5.9); scene.add(caja_);
+caja(3, 1.05, 0.9, M("#7c4a2d"), 0, 0.52, 0, caja_); caja(3.1, 0.06, 1, M("#e7d6c3"), 0, 1.07, 0, caja_);
+caja(0.7, 0.3, 0.5, M("#334155"), -0.3, 1.25, 0, caja_);
+const pantQ = caja(0.6, 0.4, 0.04, M("#1e3a8a", { emissive: "#3b82f6", emissiveIntensity: 0.6 }), -0.3, 1.6, -0.1, caja_); pantQ.rotation.x = -0.3;
+const qCartel = cartel("QuPOS", "#7c2d12"); qCartel.position.set(0.9, 1.6, 0); qCartel.scale.multiplyScalar(0.6); caja_.add(qCartel);
+// caja fuerte
+const fuerte = new THREE.Group(); fuerte.position.set(10, 0, 6); scene.add(fuerte);
+caja(1.1, 1.3, 1, M("#8b95a5", { metalness: 0.55, roughness: 0.35 }), 0, 0.65, 0, fuerte);
+const perilla = cilindro(0.18, 0.18, 0.06, M("#d1d5db", { metalness: 0.9 }), -0.56, 0.75, 0, fuerte); perilla.rotation.z = Math.PI / 2;
+const fCartel = cartel("₡ Pagos", "#166534"); fCartel.position.set(0, 1.75, 0); fCartel.scale.multiplyScalar(0.6); fuerte.add(fCartel);
+// rincón del café
+const cafe = new THREE.Group(); cafe.position.set(-9.6, 0, 6.2); scene.add(cafe);
+caja(2.4, 0.95, 0.8, M("#f8fafc"), 0, 0.47, 0, cafe); caja(2.5, 0.05, 0.9, M("#94a3b8"), 0, 0.97, 0, cafe);
+caja(0.5, 0.65, 0.45, M("#111827", { metalness: 0.5 }), -0.6, 1.32, 0, cafe);
+for (let i = 0; i < 3; i++) cilindro(0.06, 0.05, 0.11, M(["#ef4444", "#f59e0b", "#3b82f6"][i]), 0.3 + i * 0.22, 1.05, 0.1, cafe);
+// sillón y alfombra
+const alfombra = new THREE.Mesh(new THREE.PlaneGeometry(6, 3.4), M("#b45309", { roughness: 0.95 }));
+alfombra.rotation.x = -Math.PI / 2; alfombra.position.set(-4.8, 0.01, 5.2); alfombra.receiveShadow = true; scene.add(alfombra);
+const sillon = new THREE.Group(); sillon.position.set(-4.8, 0, 6.4); scene.add(sillon);
+caja(3.2, 0.45, 0.95, M("#4f46e5"), 0, 0.3, 0, sillon); caja(3.2, 0.75, 0.25, M("#4338ca"), 0, 0.75, 0.42, sillon);
+caja(0.25, 0.55, 0.95, M("#4338ca"), -1.6, 0.5, 0, sillon); caja(0.25, 0.55, 0.95, M("#4338ca"), 1.6, 0.5, 0, sillon);
+caja(1.2, 0.35, 0.7, madera, -5.05, 0.18, 4.2);   // mesita (fuera del pasillo x = -4.1)
+// plantas
+for (const [x, z, s] of [[-10.3, -6.8, 1], [3.6, -6.9, 0.8], [10.4, -2.8, 1], [3.6, 6.8, 1.1], [-0.8, 6.8, 0.9]]) {
+  cilindro(0.3 * s, 0.24 * s, 0.5 * s, M("#9a3412"), x, 0.25 * s, z);
+  for (let i = 0; i < 7; i++) {
+    const h = new THREE.Mesh(new THREE.SphereGeometry(0.28 * s, 12, 10), M(i % 2 ? "#16a34a" : "#15803d"));
+    h.position.set(x + Math.cos(i) * 0.22 * s, (0.7 + (i % 3) * 0.22) * s, z + Math.sin(i * 1.7) * 0.22 * s); h.castShadow = true; scene.add(h);
+  }
+}
+// rincón de redes (adelante, entre las dos matas): aro de luz con el celular en el trípode y una mesita con
+// la tabla de picar y un corte, para las fotos, los Reels y los TikToks de Redi
+const rincon = new THREE.Group(); rincon.position.set(1.4, 0, 6.6); scene.add(rincon);
+caja(1.0, 0.05, 0.6, M("#f5f0e8", { roughness: 0.5 }), 0.6, 0.78, 0.1, rincon);                     // mesita
+for (const [lx, lz] of [[0.15, -0.15], [1.05, -0.15], [0.15, 0.35], [1.05, 0.35]]) caja(0.04, 0.76, 0.04, negro, lx, 0.38, lz, rincon);
+caja(0.58, 0.035, 0.38, M("#c8925a", { roughness: 0.7 }), 0.52, 0.82, 0.1, rincon);                  // tabla de picar
+const grasaCorte = new THREE.Mesh(new THREE.SphereGeometry(0.16, 20, 12), M("#f1e2cf", { roughness: 0.6 }));
+grasaCorte.scale.set(1.28, 0.26, 0.9); grasaCorte.position.set(0.47, 0.862, 0.08); rincon.add(grasaCorte);
+const corte = new THREE.Mesh(new THREE.SphereGeometry(0.16, 20, 12), M("#a3161a", { roughness: 0.4 }));
+corte.scale.set(1.2, 0.3, 0.84); corte.position.set(0.52, 0.868, 0.11); corte.castShadow = true; rincon.add(corte);
+cilindro(0.008, 0.008, 0.26, M("#3f6212"), 0.74, 0.85, 0.24, rincon, 5).rotation.set(Math.PI / 2, 0, 0.5);   // romero
+cilindro(0.07, 0.05, 0.05, M("#ffffff"), 0.97, 0.83, -0.08, rincon); cilindro(0.06, 0.06, 0.01, M("#4d7c0f"), 0.97, 0.856, -0.08, rincon); // chimichurri
+const tripode = new THREE.Group(); tripode.position.set(-0.65, 0, -0.05); rincon.add(tripode);
+for (let k = 0; k < 3; k++) {   // patas abiertas desde la rodilla del trípode hasta el piso
+  const a = k * 2.094 + 0.4, pie = V3(Math.cos(a) * 0.28, 0, Math.sin(a) * 0.28), arriba = V3(0, 0.95, 0), d = arriba.clone().sub(pie);
+  const pata = cilindro(0.012, 0.012, d.length(), negro, 0, 0, 0, tripode, 6);
+  pata.position.copy(pie).addScaledVector(d, 0.5); pata.quaternion.setFromUnitVectors(V3(0, 1, 0), d.normalize());
+}
+cilindro(0.016, 0.016, 0.68, negro, 0, 1.29, 0, tripode, 8);
+const cabezal = new THREE.Group(); cabezal.position.set(0, 1.62, 0); tripode.add(cabezal);
+const aroLuz = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.035, 10, 40), M("#fff7ed", { emissive: "#fff1d6", emissiveIntensity: 0.5, roughness: 0.3 }));
+cabezal.add(aroLuz);
+const celu = caja(0.075, 0.15, 0.012, M("#111827", { emissive: "#60a5fa", emissiveIntensity: 0.25 }), 0, 0, 0, cabezal);
+cabezal.lookAt(rincon.position.x + 0.52, 0.86, rincon.position.z + 0.1);   // apunta al corte
+// el cartel va bajito, del lado de la mata: así no se monta en el nombre de Redi (en la mesita) ni en el aro de luz
+const rotuloRedes = cartelVivo("#c2410c", 448); rotuloRedes.position.set(-0.15, 1.95, 6.55); rotuloRedes.scale.multiplyScalar(0.5); scene.add(rotuloRedes);
+rotuloRedes.userData.poner("📣 Redes");
+// pizarra de pruebas en la pared izquierda: una nota por cada cosa abierta (clic → el apartado 🧪 Pruebas)
+const pizarraTex = lienzo(1024, 640, () => {});
+const pizarra = caja(2.4, 1.5, 0.05, M("#ffffff", { map: pizarraTex, emissive: "#ffffff", emissiveMap: pizarraTex, emissiveIntensity: 0.22, roughness: 0.55 }), -10.94, 2.35, 4.05);
+pizarra.rotation.y = Math.PI / 2;
+caja(2.56, 1.66, 0.04, M("#94a3b8", { metalness: 0.5, roughness: 0.4 }), -10.98, 2.35, 4.05).rotation.y = Math.PI / 2;
+caja(0.12, 0.05, 1.2, M("#94a3b8", { metalness: 0.5, roughness: 0.4 }), -10.9, 1.56, 4.05);   // repisa de los marcadores
+
+// =====================================================================================
+//  Sala de deshuese y empaque al vacío (a la derecha de la oficina, detrás de un vidrio).
+//  Sigue el mismo flujo que la animación del balanceo de la línea:
+//  cámara fría → 1 Deshuese → 2 Embolsado → 3 Empaque al vacío → 4 Pedidos → tarimas por ruta
+// =====================================================================================
+const SALA_X0 = 11.2, SALA_X1 = 22, SALA_CX = (SALA_X0 + SALA_X1) / 2, LINEA_Z = -1.8;
+const EST = { corte: 13.5, espera1: 14.95, bolsa: 16.0, espera2: 17.05, vacio: 18.2, espera3: 19.35, pedido: 20.4 };
+const antesSala = scene.children.length;
+const acero = M("#c9d2d8", { metalness: 0.75, roughness: 0.3 });
+function azulejos(rx, ry) {
+  const t = lienzo(256, 256, (g, w, h) => {
+    g.fillStyle = "#f3f6f7"; g.fillRect(0, 0, w, h); g.strokeStyle = "#cdd6da"; g.lineWidth = 3;
+    for (let i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(i * 64, 0); g.lineTo(i * 64, h); g.moveTo(0, i * 64); g.lineTo(w, i * 64); g.stroke(); }
+  });
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); return t;
+}
+function cartelVivo(color, ancho = 384) {   // como cartel(), pero el texto se puede cambiar con .userData.poner()
+  const t = lienzo(ancho, 64, () => {});
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false })); s.scale.set(ancho / 160, 0.4, 1); s.renderOrder = 10;
+  s.userData.poner = texto => {
+    if (s.userData.texto === texto) return; s.userData.texto = texto;
+    const { g } = t.userData; g.clearRect(0, 0, ancho, 64);
+    g.fillStyle = "rgba(255,255,255,.94)"; g.beginPath(); g.roundRect(4, 8, ancho - 8, 48, 24); g.fill();
+    g.fillStyle = color; g.font = "800 28px Segoe UI, Arial"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(recortar(g, texto, ancho - 34), ancho / 2, 33); t.needsUpdate = true;
+  };
+  return s;
+}
+// piso de epoxi con desagües, pared de azulejo con franja roja
+const pisoSala = lienzo(512, 512, (g, w, h) => {
+  g.fillStyle = "#aeb9be"; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 1500; i++) { g.fillStyle = `rgba(${i % 2 ? "255,255,255" : "40,50,60"},${(i % 7) / 50})`; g.fillRect((i * 151) % w, (i * 263) % h, 2, 2); }
+});
+pisoSala.wrapS = pisoSala.wrapT = THREE.RepeatWrapping; pisoSala.repeat.set(3, 4);
+// el piso y la pared arrancan en x = 11, donde termina la oficina, para que no quede una rendija
+const sueloSala = new THREE.Mesh(new THREE.PlaneGeometry(SALA_X1 - 11, FONDO), M("#ffffff", { map: pisoSala, roughness: 0.35, metalness: 0.05 }));
+sueloSala.rotation.x = -Math.PI / 2; sueloSala.position.set((11 + SALA_X1) / 2, 0, 0); sueloSala.receiveShadow = true; scene.add(sueloSala);
+for (const z of [0.05, -4.5]) caja(8.8, 0.012, 0.16, M("#5b6770", { metalness: 0.6, roughness: 0.4 }), SALA_CX, 0.007, z);
+caja(SALA_X1 - 11, 4.8, 0.3, M("#ffffff", { map: azulejos(9, 4), roughness: 0.35 }), (11 + SALA_X1) / 2, 2.4, -FONDO / 2 - 0.15);
+caja(SALA_X1 - SALA_X0, 0.16, 0.05, M("#b91c1c"), SALA_CX, 1.25, -FONDO / 2 + 0.02);
+caja(SALA_X1 - 11, 0.25, 0.32, M("#8a96a0"), (11 + SALA_X1) / 2, 0.12, -FONDO / 2 - 0.1);
+const letreroSala = lienzo(1024, 128, (g, w, h) => {
+  g.fillStyle = "#1f2937"; g.beginPath(); g.roundRect(0, 0, w, h, 26); g.fill();
+  g.fillStyle = "#fff"; g.font = "800 56px Segoe UI, Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("🔪 Deshuese y empaque al vacío", w / 2, h / 2 + 3);
+});
+caja(5.2, 0.65, 0.05, M("#ffffff", { map: letreroSala }), 15.4, 4.3, -FONDO / 2 + 0.03);
+// la división con la oficina: zócalo de azulejo y vidrio; la puerta tiene cortina de tiras (pasillo z = 3.2)
+const vidrioSala = M("#dbeafe", { transparent: true, opacity: 0.14, roughness: 0.05, metalness: 0.2, depthWrite: false });
+const PUERTA = [2.2, 4.2];
+for (const [z0, z1] of [[-FONDO / 2, PUERTA[0]], [PUERTA[1], FONDO / 2]]) {
+  const largo = z1 - z0, zc = (z0 + z1) / 2;
+  caja(0.16, 1.0, largo, M("#ffffff", { map: azulejos(largo / 1.2, 0.83), roughness: 0.35 }), SALA_X0, 0.5, zc);
+  caja(0.05, 3.76, largo, vidrioSala, SALA_X0, 2.9, zc).castShadow = false;
+  caja(0.1, 0.06, largo, metal, SALA_X0, 4.77, zc); caja(0.1, 0.06, largo, metal, SALA_X0, 1.02, zc);
+  for (let z = z0 + 1.6; z < z1 - 0.3; z += 1.6) caja(0.08, 3.76, 0.06, metal, SALA_X0, 2.9, z);
+}
+for (const z of PUERTA) caja(0.14, 4.8, 0.1, metal, SALA_X0, 2.4, z);
+caja(0.16, 0.16, 2.0, metal, SALA_X0, 2.48, 3.2);
+caja(0.05, 2.2, 2.0, vidrioSala, SALA_X0, 3.66, 3.2).castShadow = false;
+const tiras = [], matTira = M("#cfe3f5", { transparent: true, opacity: 0.5, roughness: 0.2, depthWrite: false });
+for (let i = 0; i < 8; i++) {
+  const piv = new THREE.Group(); piv.position.set(SALA_X0, 2.4, PUERTA[0] + 0.125 + i * 0.25); scene.add(piv);
+  const tira = new THREE.Mesh(new THREE.BoxGeometry(0.015, 2.35, 0.23), matTira); tira.position.y = -1.175; piv.add(tira); tiras.push(piv);
+}
+// luz blanca fría de planta (se prende en el turno)
+const focosSala =[[14, 4, 0], [19.2, 4, 0]].map(([x, y, z]) => { const l = new THREE.PointLight("#e8f4ff", 0, 13, 1.4); l.position.set(x, y, z); scene.add(l); return l; });
+
+// cámara fría: riel con ganchos; cuántas piezas cuelgan depende de los kilos por empacar
+caja(7.6, 0.08, 0.08, acero, 15.6, 3.3, -6.5);
+for (const x of [12.0, 19.2]) caja(0.06, 1.5, 0.06, acero, x, 4.05, -6.5);
+caja(7.8, 0.01, 2.0, M("#e0f2fe", { roughness: 0.25 }), 15.6, 0.006, -6.4).castShadow = false;   // escarcha
+const colgados = { res: [], cerdo: [], pollo: [] };
+function gancho(x) { const g = new THREE.Group(); g.position.set(x, 3.3, -6.5); scene.add(g); cilindro(0.012, 0.012, 0.22, acero, 0, -0.11, 0, g, 6); return g; }
+for (let i = 0; i < 6; i++) {   // cuartos de res
+  const g = gancho(12.25 + i * 0.42);
+  const carne = new THREE.Mesh(new THREE.CapsuleGeometry(0.19, 0.85, 6, 12), M("#9f1d17", { roughness: 0.5 }));
+  carne.scale.set(1, 1, 0.6); carne.position.y = -0.85; carne.castShadow = true; g.add(carne);
+  const grasa = new THREE.Mesh(new THREE.CapsuleGeometry(0.15, 0.55, 6, 10), M("#f1e2cf", { roughness: 0.7 }));
+  grasa.scale.set(1, 1, 0.35); grasa.position.set(0, -0.72, 0.07); g.add(grasa);
+  colgados.res.push(g);
+}
+for (let i = 0; i < 6; i++) {   // medias canales de cerdo
+  const g = gancho(14.85 + i * 0.36);
+  const carne = new THREE.Mesh(new THREE.CapsuleGeometry(0.15, 0.75, 6, 12), M("#e39a89", { roughness: 0.55 }));
+  carne.scale.set(1, 1, 0.5); carne.position.y = -0.75; carne.castShadow = true; g.add(carne);
+  const piel = new THREE.Mesh(new THREE.CapsuleGeometry(0.12, 0.6, 6, 10), M("#f6cdb9", { roughness: 0.6 }));
+  piel.scale.set(1, 1, 0.3); piel.position.set(0, -0.75, 0.05); g.add(piel);
+  colgados.cerdo.push(g);
+}
+for (let i = 0; i < 6; i++) {   // pollos, dos por gancho
+  const g = gancho(17.05 + i * 0.34);
+  for (const dz of [-0.1, 0.1]) {
+    const pollo = new THREE.Group(); pollo.position.set(0, -0.48, dz); g.add(pollo);
+    const cuerpo = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 10), M("#f0c98f", { roughness: 0.6 })); cuerpo.scale.set(1, 1.25, 0.85); pollo.add(cuerpo);
+    for (const s of [-1, 1]) cilindro(0.018, 0.022, 0.2, M("#e9b97a"), s * 0.04, 0.18, 0, pollo, 6).rotation.z = -s * 0.15;
+    colgados.pollo.push(pollo);
+  }
+}
+const rotulos = { res: cartelVivo("#7f1d1d"), cerdo: cartelVivo("#9d174d"), pollo: cartelVivo("#92400e") };
+[["res", 13.3], ["cerdo", 15.75], ["pollo", 17.9]].forEach(([k, x]) => { rotulos[k].position.set(x, 3.7, -6.3); rotulos[k].scale.multiplyScalar(0.75); scene.add(rotulos[k]); });
+
+// la línea: mesas de acero con mesas de espera entre cada puesto
+function mesaAcero(x, ancho, fondo = 1.0) {
+  caja(ancho, 0.05, fondo, acero, x, 0.9, LINEA_Z);
+  caja(ancho - 0.1, 0.03, fondo - 0.1, acero, x, 0.28, LINEA_Z);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) caja(0.05, 0.9, 0.05, acero, x + sx * (ancho / 2 - 0.06), 0.45, LINEA_Z + sz * (fondo / 2 - 0.06));
+}
+mesaAcero(EST.corte, 2.2); mesaAcero(EST.espera1, 0.5); mesaAcero(EST.bolsa, 1.4); mesaAcero(EST.espera2, 0.5);
+mesaAcero(EST.espera3, 0.5); mesaAcero(EST.pedido, 1.4);
+// 1 · deshuese: tablas de picar, cuchillos y el tacho de los huesos
+for (const x of [13.0, 14.0]) {
+  caja(0.85, 0.03, 0.5, M("#f8fafc", { roughness: 0.6 }), x, 0.94, LINEA_Z);
+  caja(0.26, 0.008, 0.035, acero, x + 0.18, 0.96, LINEA_Z + 0.2); caja(0.11, 0.02, 0.03, M("#111827"), x + 0.36, 0.96, LINEA_Z + 0.2);
+}
+cilindro(0.22, 0.2, 0.5, M("#64748b"), 13.5, 0.25, LINEA_Z + 0.85);
+for (let i = 0; i < 5; i++) cilindro(0.025, 0.025, 0.28, M("#efe6d8"), 13.42 + (i % 3) * 0.08, 0.52, LINEA_Z + 0.8 + (i % 2) * 0.08, scene, 6).rotation.z = 1.2 + i;
+// 2 · embolsado: balanza de 1 kg, rollo y bolsas vacías
+caja(0.38, 0.05, 0.38, acero, EST.bolsa, 0.95, LINEA_Z); caja(0.34, 0.015, 0.34, acero, EST.bolsa, 0.985, LINEA_Z);
+const basculaTex = lienzo(128, 48, () => {});
+const bascula = caja(0.26, 0.11, 0.03, M("#0f172a", { emissive: "#ffffff", emissiveMap: basculaTex, emissiveIntensity: 1 }), EST.bolsa, 1.02, LINEA_Z + 0.25);
+function pintarBascula(peso) {
+  const { g } = basculaTex.userData; g.fillStyle = "#04130a"; g.fillRect(0, 0, 128, 48);
+  g.fillStyle = peso ? "#4ade80" : "#166534"; g.font = "700 30px Consolas, monospace"; g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText(peso ? "1.000" : "0.000", 64, 25); basculaTex.needsUpdate = true;
+}
+pintarBascula(false);
+cilindro(0.06, 0.06, 0.45, M("#e0f2fe", { transparent: true, opacity: 0.75 }), EST.bolsa + 0.48, 1.0, LINEA_Z - 0.28).rotation.z = Math.PI / 2;
+caja(0.3, 0.04, 0.38, M("#eef6fb", { transparent: true, opacity: 0.7 }), EST.bolsa - 0.48, 0.94, LINEA_Z - 0.18);
+// 3 · empaque al vacío: máquina de campana doble; mientras una tapa saca el aire, la otra cámara se carga
+caja(1.6, 0.88, 0.95, acero, EST.vacio, 0.44, LINEA_Z);
+const camarasVacio = [EST.vacio - 0.4, EST.vacio + 0.4];
+for (const x of camarasVacio) caja(0.7, 0.02, 0.7, M("#334155", { metalness: 0.4 }), x, 0.89, LINEA_Z);
+const tapasVacio = camarasVacio.map(x => {   // bisagra del lado de adelante: la tapa abre lejos del operario
+  const piv = new THREE.Group(); piv.position.set(x, 0.9, LINEA_Z + 0.36); scene.add(piv);
+  const tapa = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.2, 0.72), M("#1e3a5f", { transparent: true, opacity: 0.55, roughness: 0.1, metalness: 0.3, depthWrite: false }));
+  tapa.position.set(0, 0.1, -0.36); piv.add(tapa); return piv;
+});
+caja(0.42, 0.22, 0.02, M("#0f172a"), EST.vacio, 0.62, LINEA_Z + 0.48);
+const luzVacio = caja(0.1, 0.05, 0.02, M("#16a34a", { emissive: "#22c55e", emissiveIntensity: 0.3 }), EST.vacio, 0.66, LINEA_Z + 0.5);
+// 4 · pedidos: caja que se va llenando, etiquetadora y cajas armadas abajo
+const cajaPedido = caja(0.42, 0.24, 0.34, M("#c49c72", { roughness: 0.8 }), EST.pedido + 0.3, 1.04, LINEA_Z);
+const cajaEsperando = caja(0.42, 0.26, 0.34, M("#b58d63", { roughness: 0.8 }), EST.pedido - 0.4, 1.05, LINEA_Z + 0.33); cajaEsperando.visible = false;   // cerrada, esperando que la lleven
+caja(0.2, 0.16, 0.22, M("#f1f5f9"), EST.pedido - 0.35, 1.0, LINEA_Z - 0.28);
+caja(1.2, 0.12, 0.8, M("#c49c72", { roughness: 0.8 }), EST.pedido, 0.36, LINEA_Z);
+[["1 · Deshuese", EST.corte], ["2 · Embolsado", EST.bolsa], ["3 · Empaque al vacío", EST.vacio], ["4 · Pedidos", EST.pedido]].forEach(([texto, x]) => {
+  const c = cartel(texto, "#0f766e", "rgba(255,255,255,.94)", 320); c.position.set(x, 1.8, LINEA_Z + 0.75); c.scale.multiplyScalar(0.7); c.material.depthTest = true; c.material.depthWrite = false; scene.add(c);
+});
+// pantalla de producción (kilos por ruta) en la pared del fondo
+const pantallaProdTex = lienzo(1280, 720, () => {});
+const pantallaProd = caja(2.3, 1.29, 0.06, M("#ffffff", { map: pantallaProdTex, emissive: "#ffffff", emissiveMap: pantallaProdTex, emissiveIntensity: 0.75, roughness: 0.3 }), 20.75, 2.45, -FONDO / 2 + 0.06);
+caja(2.45, 1.44, 0.05, M("#0b0f19", { metalness: 0.4 }), 20.75, 2.45, -FONDO / 2 + 0.02);
+// tarimas de despacho: una por ruta, con tantas cajas como pedidos haya (una caja por cada 3)
+const RUTAS_PLANTA = ["Alajuela", "Heredia", "San José"];
+const tarimas = RUTAS_PLANTA.map((ruta, i) => {
+  const x = 13.6 + i * 3;
+  for (let k = 0; k < 5; k++) caja(1.2, 0.04, 0.16, madera, x, 0.13, 5.82 + k * 0.24);
+  for (const dx of [-0.5, 0, 0.5]) caja(0.12, 0.1, 1.15, madera, x + dx, 0.05, 6.3);
+  const cajas = [];
+  for (let k = 0; k < 12; k++) {
+    const piso = Math.floor(k / 4), c = k % 4;
+    const b = caja(0.52, 0.34, 0.5, M("#c49c72", { roughness: 0.8 }), x + (c % 2 - 0.5) * 0.56, 0.32 + piso * 0.36, 6.3 + (Math.floor(c / 2) - 0.5) * 0.54);
+    b.visible = false; cajas.push(b);
+  }
+  const rotulo = cartelVivo("#7c2d12"); rotulo.position.set(x, 1.95, 6.3); rotulo.scale.multiplyScalar(0.7); scene.add(rotulo);
+  return { ruta, x, cajas, rotulo };
+});
+// lavamanos a la entrada
+caja(0.55, 0.85, 0.5, acero, 11.62, 0.43, 6.7); caja(0.45, 0.05, 0.4, M("#475569"), 11.62, 0.86, 6.7);
+cilindro(0.02, 0.02, 0.3, acero, 11.45, 1.0, 6.7, scene, 6);
+// lo pequeño no hace sombra: así la sala no pone lento el celular
+scene.children.slice(antesSala).forEach(o => o.traverse(m => {
+  if (!m.isMesh) return;
+  m.geometry.computeBoundingBox(); const s = m.geometry.boundingBox.getSize(new THREE.Vector3());
+  if (Math.max(s.x * m.scale.x, s.y * m.scale.y, s.z * m.scale.z) < 0.7) m.castShadow = false;
+}));
+// Lo que no se mueve ni cambia se funde en una sola pieza por color: el celular dibuja la sala en pocas
+// pasadas en lugar de cientos. Lo que cambia (cajas de las tarimas, tapas, pantallas, luces) queda aparte.
+function fundirQuietos(desde, aparte) {
+  const grupos = new Map();
+  for (const o of scene.children.slice(desde)) {
+    if (!o.isMesh || aparte.has(o) || !o.visible) continue;
+    const m = o.material;
+    if (Array.isArray(m) || m.map || m.transparent || m.emissiveMap) continue;
+    const clave = [m.color.getHexString(), m.roughness, m.metalness, m.emissive.getHexString(), m.emissiveIntensity, o.castShadow].join("|");
+    if (!grupos.has(clave)) grupos.set(clave, { m, sombra: o.castShadow, piezas: [], mallas: [] });
+    o.updateMatrix(); const gr = grupos.get(clave);
+    gr.piezas.push(o.geometry.clone().applyMatrix4(o.matrix)); gr.mallas.push(o);
+  }
+  for (const { m, sombra, piezas, mallas } of grupos.values()) {
+    if (mallas.length < 2) continue;
+    const unidas = mergeGeometries(piezas, false);
+    if (!unidas) continue;   // geometrías incompatibles: se quedan como estaban
+    mallas.forEach(o => { scene.remove(o); o.geometry.dispose(); });
+    const una = new THREE.Mesh(unidas, m); una.castShadow = sombra; una.receiveShadow = true; scene.add(una);
+  }
+}
+fundirQuietos(antesSala, new Set([...tarimas.flatMap(t => t.cajas), luzVacio, bascula, cajaPedido, cajaEsperando, pantallaProd]));
+// materiales de la sala: de noche brillan menos (si no, la sala vacía se ve igual de iluminada)
+const matsSala = new Set();
+scene.children.slice(antesSala).forEach(o => o.traverse(m => { if (m.isMesh && !m.material.emissiveMap) matsSala.add(m.material); }));
+matsSala.delete(metal); matsSala.delete(madera);   // esos también son de la oficina
+
+// =====================================================================================
+//  Lugares y caminos
+// =====================================================================================
+const LUGARES = {
+  servidor: [8.9, -5.4, Math.PI], impresora: [6.2, -5.5, Math.PI], buzon: [9.3, 0, -Math.PI / 2],
+  caja: [6.8, 4.9, 0], fuerte: [8.95, 6, -Math.PI / 2], cafe: [-9.4, 5.25, 0],
+  ventana: [1.5, -6.4, Math.PI], planta: [3.6, 5.9, 0], tv: [-8.4, -0.8, -Math.PI / 2],
+  deshuese: [16.5, -0.3, Math.PI], produccion: [20.6, -4.8, Math.PI],   // en la sala de deshuese
+  redes: [1.95, 5.95, 0],   // detrás de la mesita del rincón, mirando el corte (Redi queda en x 2.3: aplicar() le suma 0.35)
+};
+// muebles donde nadie se puede parar (x0, x1, z0, z1), para escoger dónde ponerse a conversar
+const SOLIDOS = [
+  [9.8, 10.6, -0.3, 0.3], [9.45, 10.55, 5.5, 6.5], [5.4, 7.0, -6.85, -5.95], [5.3, 8.3, 5.45, 6.35], [8.25, 9.55, -6.9, -5.9],
+  [-10.8, -8.4, 5.8, 6.6], [-6.4, -3.2, 5.9, 6.9], [-5.65, -4.45, 3.85, 4.55], [10.6, 11.6, -7.5, 2.2], [10.6, 11.6, 4.2, 7.5],
+  [12.4, 21.1, -2.3, -1.3], [13.0, 20.2, 5.7, 6.9], [11.35, 11.9, 6.45, 6.95],
+  [1.5, 2.5, 6.4, 7.0], [0.45, 1.05, 6.25, 6.85],   // rincón de redes: mesita y trípode
+  ...Object.values(ESCRITORIOS).map(([x, z]) => [x - 1.5, x + 1.5, z - 0.8, z + 0.7]),
+];
+const libre = (x, z) => x > -10.7 && x < SALA_X1 - 0.35 && Math.abs(z) < FONDO / 2 - 0.35 && !SOLIDOS.some(([x0, x1, z0, z1]) => x > x0 - 0.3 && x < x1 + 0.3 && z > z0 - 0.3 && z < z1 + 0.3);
+const SILLON = [[-5.8, 6.1], [-4.8, 6.1], [-3.8, 6.1]];
+// ¿hay alguien (u otro va para allá) a menos de 0.5 m de ese punto?
+const ocupado = (p, x, z) => Object.values(gente).some(o => o !== p && [[o.g.position.x, o.g.position.z], o.ruta[o.ruta.length - 1]]
+  .some(w => w && Math.hypot(w[0] - x, w[1] - z) < 0.5));
+// red de pasillos: nodos en los cruces. La oficina es una cuadrícula; la sala de deshuese tiene la suya
+// (la línea de producción solo se cruza por las puntas) y las dos se unen por la puerta de tiras.
+const XS = [-8.6, -4.1, -0.3, 3.6, 7.6, 9.4], ZS = [-5.2, -1.0, 3.2, 5.0];
+const XB = [11.9, 14.5, 17.5, 21.5], ZB = [-3.4, 0.6, 3.2, 5.0];
+const nodos = [], ady = [];
+function nodo(x, z) { let i = nodos.findIndex(n => n[0] === x && n[1] === z); if (i < 0) { i = nodos.push([x, z]) - 1; ady[i] = []; } return i; }
+function unir(a, b) { ady[a].push(b); ady[b].push(a); }
+function malla(xs, zs, cortado = () => false) {
+  xs.forEach((x, i) => zs.forEach((z, j) => {
+    const n = nodo(x, z);
+    if (i > 0) unir(nodo(xs[i - 1], z), n);
+    if (j > 0 && !cortado(x, zs[j - 1])) unir(nodo(x, zs[j - 1]), n);
+  }));
+}
+malla(XS, ZS);
+malla(XB, ZB, (x, zAntes) => zAntes === ZB[0] && x !== XB[0] && x !== XB[XB.length - 1]);
+unir(nodo(9.4, 3.2), nodo(11.9, 3.2));   // la puerta de tiras
+const enSala = x => x > SALA_X0;
+function cercano(x, z) {   // el nodo más cerca, del mismo lado de la división (si no, cruzaría el vidrio)
+  let m = -1, dm = Infinity;
+  nodos.forEach(([a, b], i) => { const d = Math.hypot(a - x, b - z); if (enSala(a) === enSala(x) && d < dm) { dm = d; m = i; } });
+  return m;
+}
+function camino(x0, z0, x1, z1) {
+  const a = cercano(x0, z0), b = cercano(x1, z1), prev = { [a]: -1 }, cola = [a];
+  while (cola.length) { const n = cola.shift(); if (n === b) break; for (const v of ady[n]) if (!(v in prev)) { prev[v] = n; cola.push(v); } }
+  const r = []; for (let n = b; n !== -1 && n !== undefined; n = prev[n]) r.unshift(nodos[n]);
+  return [...r, [x1, z1]];
+}
+
+// =====================================================================================
+//  Los agentes
+// =====================================================================================
+const PIEL = ["#f1c7a4", "#d9a07a", "#b9825d", "#f3d2b8", "#8d5a3b", "#e6b48f", "#c69072"];
+const PELO = ["#2b1d14", "#5a3a22", "#141414", "#b0772f", "#3d2a1d", "#6b4b2a", "#7c2d12"];
+const gente = {};
+function crearAgente(id, i, ag) {
+  const g = new THREE.Group(), cuerpo = new THREE.Group(); g.add(cuerpo);
+  const camisa = M(ag.color), pantalon = M("#1f2937"), piel = M(PIEL[i % PIEL.length]), pelo = M(PELO[i % PELO.length]);
+  const pierna = lado => { const p = new THREE.Group(); p.position.set(lado * 0.12, 0.82, 0);
+    const m = caja(0.16, 0.8, 0.18, pantalon, 0, -0.4, 0, p); caja(0.18, 0.1, 0.3, M("#111827"), 0, -0.79, 0.06, p); cuerpo.add(p); return p; };
+  const brazo = lado => { const p = new THREE.Group(); p.position.set(lado * 0.33, 1.42, 0);
+    caja(0.13, 0.6, 0.14, camisa, 0, -0.3, 0, p); caja(0.12, 0.12, 0.12, piel, 0, -0.64, 0, p); cuerpo.add(p); return p; };
+  const pi = pierna(-1), pd = pierna(1);
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.27, 0.42, 6, 14), camisa); torso.position.y = 1.2; torso.castShadow = true; cuerpo.add(torso);
+  const bi = brazo(-1), bd = brazo(1);
+  const cabeza = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 16), piel); cabeza.position.y = 1.78; cabeza.castShadow = true; cuerpo.add(cabeza);
+  const cab = new THREE.Mesh(new THREE.SphereGeometry(0.235, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), pelo); cab.position.y = 1.8; cab.rotation.x = -0.25; cuerpo.add(cab);
+  for (const s of [-1, 1]) { const o = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), M("#111")); o.position.set(s * 0.08, 1.8, 0.2); cuerpo.add(o); }
+  const nombre = cartel(ag.nombre, ag.color); nombre.position.y = 2.3; g.add(nombre);
+  const icono = emoji(""); icono.position.y = 2.75; g.add(icono);
+  const m = ESCRITORIOS[id] || [0, 0];
+  g.position.set(m[0], 0, m[1] + 0.95); scene.add(g);
+  return { id, ag, g, cuerpo, pi, pd, bi, bd, nombre, icono, ruta: [], fase: Math.random() * 6, espera: 1 + Math.random() * 3,
+           pose: "parado", cara: Math.PI, estado: "listo", tarea: "", detalle: "", objetivo: "", haciendo: "" };
+}
+
+function destino(id, estado, tarea) {
+  const t = (tarea || "").toLowerCase(), m = ESCRITORIOS[id];
+  // sin escritorio (un agente más nuevo que la página, como pasa con agentes.js o la web abierta): anda suelto
+  if (!m || !["trabajando", "problema", "esperando"].includes(estado)) return null;
+  const mesa = [m[0], m[1] + 0.95, Math.PI, "sentado"];
+  const L = k => [...LUGARES[k], "parado"];
+  if (id === "vigilante") return L("servidor");
+  if (id === "impresor") return /imprim|papel|impresora/.test(t) ? L("impresora") : mesa;
+  if (id === "produccion") return /mand|correo/.test(t) ? L("buzon") : /hoja/.test(t) ? L("impresora") : /resumen|producci|empac/.test(t) ? L("produccion") : mesa;
+  if (id === "facturador") return /qupos|f2/.test(t) ? L("caja") : /correo|bajando/.test(t) ? L("buzon") : /oracle|enviar|subiendo/.test(t) ? L("servidor") : mesa;
+  if (id === "codigos") return /oracle|bajando/.test(t) ? L("servidor") : /mand|informe/.test(t) ? L("buzon") : mesa;
+  if (id === "cobros") return L("fuerte");
+  // Redi: fotos, Reels, TikToks y piezas en el rincón del aro de luz; lo demás (programar en Business Suite,
+  // anuncios, campañas, métricas) en su compu
+  if (id === "redes") return /foto|video|reel|tiktok|grab|pieza|historia/.test(t) ? L("redes") : mesa;
+  return mesa;
+}
+function irA(p, x, z, cara, pose) {
+  const r = camino(p.g.position.x, p.g.position.z, x, z);
+  p.ruta = r; p.alLlegar = { cara, pose }; p.pose = "parado";
+}
+const hayNoche = () => { const h = horaCR().getHours(); return h < 6 || h >= 19; };
+function pasear(p) {
+  const m = ESCRITORIOS[p.id];   // sin escritorio (agente más nuevo que la página): no tiene silla propia
+  p.destinoX = null;
+  if (hayNoche()) {   // los tres primeros se duermen en el sillón y los demás en su silla: nunca dos en el mismo puesto
+    const k = Object.keys(gente).indexOf(p.id);
+    // si su puesto del sillón lo tiene otro (con el 📱 de la tarde), se duerme en su silla
+    if (k < SILLON.length && !ocupado(p, SILLON[k][0], SILLON[k][1])) irA(p, SILLON[k][0], SILLON[k][1], 0, "sentado");
+    else if (m) irA(p, m[0], m[1] + 0.95, Math.PI, "sentado");
+    else { const [x, z, c] = LUGARES.tv; irA(p, x, z + Math.random() * 2.4 - 1.2, c, "parado"); }
+    p.haciendo = "💤"; p.espera = 1e9; return;
+  }
+  const opciones = [
+    () => { if (!m) return opciones[1]();
+            irA(p, m[0], m[1] + 0.95, Math.PI, "sentado"); p.haciendo = "💻"; p.espera = 12 + Math.random() * 14; },
+    () => { const [x, z, c] = LUGARES.cafe; irA(p, x + Math.random() * 1.2, z, c, "parado"); p.haciendo = "☕"; p.espera = 6 + Math.random() * 6; },
+    () => { const libres = SILLON.filter(([x, z]) => !ocupado(p, x, z));   // un puesto del sillón que nadie tenga
+            if (!libres.length) return opciones[1]();
+            const [x, z] = libres[Math.floor(Math.random() * libres.length)]; irA(p, x, z, 0, "sentado"); p.haciendo = "📱"; p.espera = 8 + Math.random() * 10; },
+    () => { const [x, z, c] = LUGARES.ventana; irA(p, x + Math.random() * 2 - 1, z, c, "parado"); p.haciendo = "🌤️"; p.espera = 5 + Math.random() * 5; },
+    () => { const [x, z, c] = LUGARES.tv; irA(p, x, z + Math.random() * 2.4 - 1.2, c, "parado"); p.haciendo = "📺"; p.espera = 6 + Math.random() * 8; },
+    () => { // a ver la línea, en uno de 8 puestos frente a ella (sin pararse en el pasillo del que lleva las cajas)
+            const [x, z, c] = LUGARES.deshuese, ocupados = Object.values(gente).filter(o => o !== p).map(o => o.destinoX);
+            const puesto = [0, 1, 2, 3, 4, 5, 6, 7].map(k => 14 + k * 0.75).filter(px => !ocupados.includes(px));
+            p.destinoX = puesto[Math.floor(Math.random() * puesto.length)] ?? x;
+            irA(p, p.destinoX, z, c, "parado"); p.haciendo = "🥩"; p.espera = 7 + Math.random() * 8; },
+    () => { const otros = Object.values(gente).filter(o => o !== p && o.pose === "parado" && !o.ruta.length && o.destinoX == null);
+            if (!otros.length) return opciones[1]();
+            const o = otros[Math.floor(Math.random() * otros.length)];
+            // a un lado del otro, donde no haya un mueble y del mismo lado del vidrio
+            const { x: ox, z: oz } = o.g.position;
+            const lado = [[0.8, 0.2, -Math.PI / 2], [-0.8, 0.2, Math.PI / 2], [0, 0.8, Math.PI], [0, -0.8, 0]]
+              .find(([dx, dz]) => libre(ox + dx, oz + dz) && enSala(ox + dx) === enSala(ox) &&
+                    !Object.values(gente).some(q => q !== p && q !== o && [[q.g.position.x, q.g.position.z], q.ruta[q.ruta.length - 1]]
+                      .some(w => w && Math.hypot(w[0] - ox - dx, w[1] - oz - dz) < 0.6)));
+            if (!lado) return opciones[1]();
+            irA(p, ox + lado[0], oz + lado[1], lado[2], "parado"); p.haciendo = "💬"; o.haciendo = "💬"; p.espera = 5 + Math.random() * 4;
+            const largo = p.ruta.reduce((s, [x, z], i, r) => s + Math.hypot(x - (i ? r[i - 1][0] : p.g.position.x), z - (i ? r[i - 1][1] : p.g.position.z)), 0);
+            o.espera = Math.max(o.espera, largo / 2.1 + p.espera); },
+  ];
+  opciones[Math.floor(Math.random() * opciones.length)]();
+}
+
+// =====================================================================================
+//  Efectos: hojas que salen de la impresora, cartas que vuelan, monedas, vapor del café
+// =====================================================================================
+const efectos = [];
+function particula(mesh, vida, mover) { scene.add(mesh); efectos.push({ mesh, vida, t: 0, mover }); }
+const papel = M("#ffffff"), carta = M("#fef3c7"), oro = M("#facc15", { metalness: 0.9, roughness: 0.25, emissive: "#a16207", emissiveIntensity: 0.3 });
+// una sola geometría por tipo de efecto (crear una nueva cada vez llenaba la memoria si la página quedaba abierta todo el día)
+const GEO = { hoja: new THREE.BoxGeometry(0.42, 0.01, 0.6), carta: new THREE.BoxGeometry(0.35, 0.22, 0.02),
+              moneda: new THREE.CylinderGeometry(0.09, 0.09, 0.02, 16), vapor: new THREE.SphereGeometry(0.06, 8, 8) };
+// likes del rincón de redes: siempre los mismos 8 (dos dibujos), se reciclan cuando terminan de subir
+const texLike = ["❤️", "👍"].map(e => lienzo(128, 128, g => { g.font = "96px Segoe UI Emoji, Apple Color Emoji, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(e, 64, 72); }));
+const LIKES = Array.from({ length: 8 }, (_, i) => {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texLike[i % 3 === 2 ? 1 : 0], transparent: true, depthWrite: false })); s.renderOrder = 9; return s;
+});
+let siguiente = { imp: 0, carta: 0, moneda: 0, vapor: 0, like: 0 }, likeN = 0;
+function efectosDe(t) {
+  const P = Object.values(gente);
+  const en = (p, k) => { const [x, z] = LUGARES[k]; return Math.hypot(p.g.position.x - x, p.g.position.z - z) < 0.6 && !p.ruta.length; };
+  const grabando = P.some(p => p.id === "redes" && p.estado === "trabajando" && en(p, "redes"));
+  aroLuz.material.emissiveIntensity = grabando ? 2.2 : 0.5; celu.material.emissiveIntensity = grabando ? 1.2 : 0.25;
+  if (grabando && t > siguiente.like) {
+    siguiente.like = t + 0.45;
+    // salen del celular hacia el lado de la mesita (el cartel queda del otro lado)
+    const s = LIKES[likeN++ % LIKES.length], dx = Math.random() * 0.45 - 0.05, x0 = rincon.position.x + tripode.position.x, z0 = rincon.position.z + tripode.position.z;
+    if (!s.parent) particula(s, 2, (m, k) => {   // sube meciéndose y se desvanece al final
+      m.position.set(x0 + dx + Math.sin(k * 8 + dx * 9) * 0.12, 1.9 + k * 1.2, z0 + dx * 0.3);
+      m.material.opacity = k < 0.6 ? 1 : (1 - k) / 0.4; m.scale.setScalar(0.18 + Math.min(1, k * 5) * 0.16);
+    });
+  }
+  if (P.some(p => p.estado === "trabajando" && en(p, "impresora")) && t > siguiente.imp) {
+    siguiente.imp = t + 1.1;
+    particula(new THREE.Mesh(GEO.hoja, papel), 1.6, (m, k) => { m.position.set(6.2, 1.0 - k * 0.02, -6.1 + k * 0.5); m.rotation.y = k * 0.2; });
+  }
+  if (P.some(p => p.estado === "trabajando" && en(p, "buzon")) && t > siguiente.carta) {
+    siguiente.carta = t + 0.7;
+    const z0 = (Math.random() - 0.5) * 0.5;
+    particula(new THREE.Mesh(GEO.carta, carta), 2.4, (m, k) => { m.position.set(10.2 - k * 1.5, 1.7 + k * 2.2, z0 + Math.sin(k * 6) * 0.3); m.rotation.set(k * 3, k * 4, 0); });
+  }
+  if (P.some(p => p.estado === "trabajando" && en(p, "fuerte")) && t > siguiente.moneda) {
+    siguiente.moneda = t + 0.4;
+    const a = Math.random() * 6.28;
+    particula(new THREE.Mesh(GEO.moneda, oro), 1.4, (m, k) => { m.position.set(10 + Math.cos(a) * k * 0.6, 1.4 + Math.sin(k * 3.1) * 0.9, 6 + Math.sin(a) * k * 0.6); m.rotation.x = k * 12; });
+  }
+  if (t > siguiente.vapor) {
+    siguiente.vapor = t + 0.35;
+    const s = new THREE.Mesh(GEO.vapor, new THREE.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.5 }));
+    particula(s, 2, (m, k) => { m.position.set(-10.2 + Math.sin(k * 5) * 0.06, 1.7 + k * 0.9, 6.2); m.material.opacity = 0.5 * (1 - k); m.scale.setScalar(1 + k * 2); });
+  }
+  for (let i = efectos.length - 1; i >= 0; i--) {
+    const e = efectos[i]; e.t += 1 / 60; const k = e.t / e.vida;
+    if (k >= 1) { scene.remove(e.mesh); if (e.mesh.geometry === GEO.vapor) e.mesh.material.dispose(); efectos.splice(i, 1); } else e.mover(e.mesh, k);
+  }
+}
+
+// =====================================================================================
+//  La planta en movimiento: los carniceros y el producto avanzando por la línea
+// =====================================================================================
+const enTurnoPlanta = () => { const h = horaCR().getHours(); return h >= 5 && h < 18; };
+function andar(p, dt, t) {   // un paso por la ruta, moviendo piernas y brazos
+  const pos = p.g.position, [tx, tz] = p.ruta[0], dx = tx - pos.x, dz = tz - pos.z, d = Math.hypot(dx, dz), v = 2.1 * dt;
+  if (d <= v) { pos.x = tx; pos.z = tz; p.ruta.shift(); if (!p.ruta.length && p.alLlegar) { p.cara = p.alLlegar.cara; p.pose = p.alLlegar.pose; } }
+  else { pos.x += dx / d * v; pos.z += dz / d * v; p.cara = Math.atan2(dx, dz); }
+  const s = Math.sin(t * 9 + p.fase);
+  p.pi.rotation.x = s * 0.55; p.pd.rotation.x = -s * 0.55; p.bi.rotation.x = -s * 0.45; p.bd.rotation.x = s * 0.45;
+  p.cuerpo.position.y = Math.abs(s) * 0.05;
+}
+function girar(p, dt) { let dif = p.cara - p.g.rotation.y; dif = Math.atan2(Math.sin(dif), Math.cos(dif)); p.g.rotation.y += dif * Math.min(1, dt * 8); }
+
+function crearCarnicero(i) {   // gabacha blanca, delantal, gorro y guantes azules
+  const g = new THREE.Group(), cuerpo = new THREE.Group(); g.add(cuerpo);
+  const blanco = M("#f8fafc", { roughness: 0.8 }), piel = M(PIEL[(i + 2) % 6]);
+  const pierna = lado => { const p = new THREE.Group(); p.position.set(lado * 0.12, 0.82, 0);
+    caja(0.16, 0.8, 0.18, M("#cbd5e1"), 0, -0.4, 0, p); caja(0.19, 0.28, 0.3, M("#e2e8f0"), 0, -0.68, 0.04, p); cuerpo.add(p); return p; };
+  const brazo = lado => { const p = new THREE.Group(); p.position.set(lado * 0.33, 1.42, 0);
+    caja(0.13, 0.6, 0.14, blanco, 0, -0.3, 0, p); caja(0.12, 0.13, 0.12, M("#60a5fa"), 0, -0.64, 0, p); cuerpo.add(p); return p; };
+  const pi = pierna(-1), pd = pierna(1);
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.27, 0.42, 6, 14), blanco); torso.position.y = 1.2; torso.castShadow = true; cuerpo.add(torso);
+  caja(0.44, 0.62, 0.04, M("#dbeafe", { roughness: 0.4 }), 0, 1.06, 0.27, cuerpo);
+  const bi = brazo(-1), bd = brazo(1);
+  const cabeza = new THREE.Mesh(new THREE.SphereGeometry(0.22, 18, 14), piel); cabeza.position.y = 1.78; cabeza.castShadow = true; cuerpo.add(cabeza);
+  cilindro(0.235, 0.235, 0.16, blanco, 0, 1.94, 0, cuerpo, 18);
+  for (const s of [-1, 1]) { const o = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), M("#111")); o.position.set(s * 0.08, 1.8, 0.2); cuerpo.add(o); }
+  // lo que lleva en las manos: una pieza de la cámara fría o una caja de pedido
+  const pieza = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.35, 4, 10), M("#9f1d17", { roughness: 0.5 })); pieza.rotation.z = Math.PI / 2;
+  const cajaMano = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.3, 0.4), M("#c49c72", { roughness: 0.8 }));
+  for (const m of [pieza, cajaMano]) { m.position.set(0, 1.12, 0.45); m.visible = false; cuerpo.add(m); }
+  for (const m of [...cuerpo.children]) m.traverse?.(x => { if (x.isMesh && x !== torso && x !== cabeza) x.castShadow = false; });
+  scene.add(g);
+  return { g, cuerpo, pi, pd, bi, bd, en: { pieza, caja: cajaMano }, ruta: [], fase: i * 1.7, cara: 0, pose: "parado", espera: 2 + i, plan: null };
+}
+// cada uno en su puesto, de pie detrás de la línea mirando hacia adelante; el último lleva las cajas a las tarimas
+const PUESTOS = [
+  { x: 12.95, z: -2.85, que: "corta", cara: 0 }, { x: 14.05, z: -2.85, que: "corta", cara: 0 },
+  { x: EST.bolsa, z: -2.85, que: "embolsa", cara: 0 }, { x: EST.vacio, z: -2.85, que: "vacio", cara: 0 },
+  { x: EST.pedido, z: -2.85, que: "pedidos", cara: 0 }, { x: 21.6, z: -0.5, que: "lleva", cara: Math.PI },
+];
+const carniceros = PUESTOS.map((pu, i) => {
+  const c = crearCarnicero(i); Object.assign(c, { puesto: pu, que: pu.que, cara: pu.cara });
+  c.g.position.set(pu.x, 0, pu.z); c.g.rotation.y = pu.cara; return c;
+});
+function cargar(c, que) { c.carga = que; c.en.pieza.visible = que === "pieza"; c.en.caja.visible = que === "caja"; }
+function siguientePaso(c) {
+  const paso = c.plan && c.plan.shift();
+  if (!paso) { c.plan = null; c.espera = c.que === "lleva" ? 0.5 : 4 + Math.random() * 6; return; }
+  c.paso = paso; c.espera = paso.espera;
+  if (Math.hypot(paso.x - c.g.position.x, paso.z - c.g.position.z) < 2.0) { c.ruta = [[paso.x, paso.z]]; c.alLlegar = { cara: paso.cara, pose: "parado" }; }
+  else irA(c, paso.x, paso.z, paso.cara, "parado");
+}
+function decidir(c) {
+  const pu = c.puesto, casa = { x: pu.x, z: pu.z, cara: pu.cara, espera: 0.3 };
+  if (c.que === "corta" && Math.random() < 0.3) {   // va a la cámara fría por otra pieza
+    const visibles = [...colgados.res, ...colgados.cerdo].filter(g => g.visible), g = visibles[Math.floor(Math.random() * visibles.length)];
+    c.plan = [{ x: g ? g.position.x : 13, z: -5.55, cara: Math.PI, espera: 1.8, luego: () => cargar(c, "pieza") },
+              { ...casa, luego: () => cargar(c, null) }];
+    return siguientePaso(c);
+  }
+  if (c.que === "lleva" && linea.cajasListas > 0) {   // recoge la caja armada en la mesa y la lleva a la tarima de su ruta
+    const tm = tarimas[Math.floor(Math.random() * tarimas.length)];
+    c.plan = [{ x: EST.pedido - 0.4, z: LINEA_Z + 1.1, cara: Math.PI, espera: 0.6, luego: () => { if (linea.cajasListas > 0) { linea.cajasListas--; linea.ocultarCaja = 0.4; cargar(c, "caja"); } } },
+              { x: tm.x + (Math.random() - 0.5) * 0.5, z: 5.05, cara: 0, espera: 1.2, luego: () => cargar(c, null) }, casa];
+    return siguientePaso(c);
+  }
+  c.espera = c.que === "lleva" ? 0.5 : 3 + Math.random() * 5;
+}
+function moverCarniceros(dt, t, turno) {
+  for (const c of carniceros) {
+    c.g.visible = turno;
+    if (!turno) continue;
+    if (c.ruta.length) andar(c, dt, t);
+    else {
+      c.cuerpo.position.y = 0; c.pi.rotation.x = c.pd.rotation.x = 0;
+      if ((c.espera -= dt) <= 0) { const luego = c.paso && c.paso.luego; c.paso = null; if (luego) luego(); c.plan ? siguientePaso(c) : decidir(c); }
+      const enPuesto = Math.hypot(c.g.position.x - c.puesto.x, c.g.position.z - c.puesto.z) < 0.2, f = c.fase;
+      let i = Math.sin(t * 1.5 + f) * 0.05, d = -i;
+      if (!enPuesto) i = d = c.que === "corta" ? -2.5 : -1.2;   // en la cámara fría: brazos arriba, descolgando la pieza
+      else if (c.que === "corta") { i = -0.9; d = -1.25 + Math.sin(t * 9 + f) * 0.4; }
+      else if (c.que === "embolsa") { i = -1.0 + Math.sin(t * 4 + f) * 0.25; d = -1.0 - Math.sin(t * 4 + f) * 0.25; }
+      else if (c.que === "vacio") { i = d = -1.2 + Math.sin(t * 2 + f) * 0.3; }
+      else if (c.que === "pedidos") { i = -1.0 + Math.sin(t * 5 + f) * 0.15; d = -1.0 + Math.cos(t * 5 + f) * 0.15; }
+      c.bi.rotation.x = i; c.bd.rotation.x = d;
+    }
+    if (c.carga) c.bi.rotation.x = c.bd.rotation.x = -1.35;   // con algo en las manos
+    girar(c, dt);
+  }
+}
+
+// El producto: cada corte sale de la tabla, espera, se embolsa, se le saca el aire y termina en la caja del pedido.
+const FICHA = { crudo: M("#b3261e", { roughness: 0.5 }), bolsa: M("#e9a39b", { roughness: 0.2, transparent: true, opacity: 0.92 }),
+                vacio: M("#8f1d16", { roughness: 0.12, metalness: 0.3 }) };
+const geoFicha = new THREE.BoxGeometry(0.17, 0.07, 0.13), sobrantes = [];
+function nuevaFicha(x) {
+  const f = sobrantes.pop() || { m: new THREE.Mesh(geoFicha, FICHA.crudo) };
+  f.m.material = FICHA.crudo; f.m.scale.set(1, 1, 1); f.m.visible = true; f.m.position.set(x, 0.98, LINEA_Z); f.clave = null;
+  if (!f.m.parent) scene.add(f.m); return f;
+}
+function soltarFicha(f) { f.m.visible = false; sobrantes.push(f); }
+const bolsasCaja = [0, 1, 2, 3].map(k => { const b = caja(0.15, 0.04, 0.12, FICHA.vacio, EST.pedido + 0.22 + (k % 2) * 0.17, 1.15, LINEA_Z + (Math.floor(k / 2) - 0.5) * 0.14); b.visible = false; b.castShadow = false; return b; });
+const linea = { corte: [null, null], espera1: [], bolsa: null, espera2: [], camara: [[], []], tapa: 0, ciclo: 0, carga: 0,
+                espera3: [], pedido: null, enCaja: 0, cajasListas: 0, cerrada: 0 };
+function avanzarLinea(dt) {
+  const L = linea, MAX = 12;
+  // 1 · deshuese: dos personas, cada una saca un corte cada 4-6 s (si hay campo en la mesa de espera)
+  L.activa = true;
+  L.corte.forEach((f, s) => {
+    const c = carniceros[s], presente = !c.ruta.length && Math.hypot(c.g.position.x - c.puesto.x, c.g.position.z - c.puesto.z) < 0.2;
+    if (!presente) return;
+    if (!f) { L.corte[s] = f = nuevaFicha(13.0 + s); f.t = 6 + Math.random(); }
+    else if ((f.t -= dt) <= 0 && L.espera1.length < MAX) { L.espera1.push(f); L.corte[s] = null; }
+  });
+  // 2 · embolsado: pesa 1 kg y lo mete en la bolsa
+  if (!L.bolsa && L.espera1.length) { L.bolsa = L.espera1.shift(); L.bolsa.t = 2 + Math.random() * 0.8; pintarBascula(true); }
+  else if (L.bolsa && (L.bolsa.t -= dt) <= 0 && L.espera2.length < MAX) { L.bolsa.m.material = FICHA.bolsa; L.espera2.push(L.bolsa); L.bolsa = null; pintarBascula(false); }
+  // 3 · empaque al vacío: se carga la cámara abierta mientras la tapada saca el aire (6 s por ciclo)
+  const abierta = L.camara[1 - L.tapa], tapada = L.camara[L.tapa];
+  const tapa0Quieta = L.tapa === 1 || (L.vaciando ? tapasVacio[0].rotation.x < 0.05 && L.ciclo > 0.5 : tapasVacio[0].rotation.x > 1.7);
+  if ((L.carga -= dt) <= 0 && abierta.length < 4 && L.espera2.length && tapa0Quieta) { abierta.push(L.espera2.shift()); L.carga = 0.6; }
+  tapada.forEach(f => f.m.scale.y = Math.max(0.55, f.m.scale.y - dt * 0.12));
+  L.juntando = abierta.length ? (L.juntando || 0) + dt : 0;
+  if ((L.ciclo -= dt) <= 0) {
+    L.vaciando = false;
+    if (tapada.length) {   // ya sacó el aire: se abre la tapa y, cuando está arriba, salen las bolsas selladas
+      if (tapasVacio[L.tapa].rotation.x > 1.5 && L.espera3.length + tapada.length <= MAX) {
+        tapada.forEach(f => { f.m.material = FICHA.vacio; L.espera3.push(f); }); L.camara[L.tapa] = [];
+      }
+      L.ciclo = 0.6;
+    } else {
+      const llena = L.carga <= 0 && (abierta.length >= 4 || (abierta.length && L.juntando > 2.5 && !L.espera2.length && !L.bolsa));
+      if (llena) { L.tapa = 1 - L.tapa; L.ciclo = 6; L.vaciando = true; L.juntando = 0; } else L.ciclo = 0.5;
+    }
+  }
+  // 4 · pedidos: cuatro bolsas por caja; la caja armada espera a que la lleven a la tarima
+  if (!L.pedido && L.espera3.length && L.cajasListas < 2) { L.pedido = L.espera3.shift(); L.pedido.t = 2.2 + Math.random() * 0.6; }
+  else if (L.pedido && (L.pedido.t -= dt) <= 0) {
+    soltarFicha(L.pedido); L.pedido = null;
+    if (++L.enCaja >= 4) { L.enCaja = 0; L.cajasListas++; }
+  }
+}
+function vaciarLinea() {   // a las 18:00: se guarda todo, la báscula en cero, la máquina parada
+  const L = linea;
+  [...L.corte, ...L.espera1, L.bolsa, ...L.espera2, ...L.camara[0], ...L.camara[1], ...L.espera3, L.pedido].forEach(f => f && soltarFicha(f));
+  Object.assign(L, { corte: [null, null], espera1: [], bolsa: null, espera2: [], camara: [[], []], espera3: [], pedido: null,
+                     enCaja: 0, cajasListas: 0, ciclo: 0, vaciando: false, activa: false, juntando: 0 });
+  pintarBascula(false);
+  carniceros.forEach(c => { c.ruta = []; c.plan = null; c.paso = null; cargar(c, null); c.g.position.set(c.puesto.x, 0, c.puesto.z); c.cara = c.g.rotation.y = c.puesto.cara; c.espera = 2; });
+}
+function apilar(lista, x) {
+  lista.forEach((f, k) => f.quiero = [x + ((k % 2) - 0.5) * 0.19, 0.965 + Math.floor(k / 4) * 0.075, LINEA_Z + ((Math.floor(k / 2) % 2) - 0.5) * 0.16]);
+}
+function moverFichas(dt, t) {
+  const L = linea;
+  L.corte.forEach((f, s) => f && (f.quiero = [13.0 + s, 0.98, LINEA_Z]));
+  apilar(L.espera1, EST.espera1); apilar(L.espera2, EST.espera2); apilar(L.espera3, EST.espera3);
+  if (L.bolsa) L.bolsa.quiero = [EST.bolsa, 1.03, LINEA_Z];
+  L.camara.forEach((lista, c) => lista.forEach((f, k) => f.quiero = [camarasVacio[c] + ((k % 2) - 0.5) * 0.3, 0.94, LINEA_Z + (Math.floor(k / 2) - 0.5) * 0.3]));
+  if (L.pedido) L.pedido.quiero = [EST.pedido - 0.05, 0.98, LINEA_Z];
+  const k = 1 - Math.exp(-dt * 6);
+  for (const f of [...L.corte, ...L.espera1, L.bolsa, ...L.espera2, ...L.camara[0], ...L.camara[1], ...L.espera3, L.pedido]) {
+    if (!f || !f.quiero) continue;
+    const clave = f.quiero.join(",");
+    if (f.clave !== clave) { f.sinSalto = f.clave != null && f.s < 1; f.clave = clave; f.desde = f.m.position.clone(); f.s = 0; }
+    f.s = Math.min(1, f.s + dt * 2.2);
+    const s = f.s * f.s * (3 - 2 * f.s), [x, y, z] = f.quiero, d = f.desde, salto = f.sinSalto ? 0 : Math.min(0.45, Math.hypot(x - d.x, z - d.z) * 0.6);
+    f.m.position.set(d.x + (x - d.x) * s, d.y + (y - d.y) * s + salto * Math.sin(Math.PI * f.s), d.z + (z - d.z) * s);
+  }
+  // la tapa de la cámara que hace vacío baja; la otra queda abierta para cargar
+  tapasVacio.forEach((piv, c) => { const quiero = c === L.tapa && L.vaciando ? 0 : 1.75; piv.rotation.x += (quiero - piv.rotation.x) * Math.min(1, dt * 4); });
+  luzVacio.material.emissiveIntensity = L.vaciando ? (Math.sin(t * 8) > 0 ? 1.8 : 0.3) : 0.3;
+  bolsasCaja.forEach((b, i) => b.visible = i < L.enCaja);
+  L.ocultarCaja = (L.ocultarCaja || 0) - dt;
+  cajaEsperando.visible = L.cajasListas > 0 && L.ocultarCaja <= 0;   // caja cerrada esperando que la lleven
+}
+// cortinas de tiras: se mecen cuando alguien pasa por la puerta
+function moverTiras(dt, t) {
+  const cerca = [...Object.values(gente), ...carniceros].some(p => p.g.visible && Math.abs(p.g.position.x - SALA_X0) < 0.9 && Math.abs(p.g.position.z - 3.2) < 1.2);
+  tiras.forEach((piv, i) => { const quiero = cerca ? Math.sin(t * 7 + i * 0.8) * 0.4 : 0; piv.rotation.z += (quiero - piv.rotation.z) * Math.min(1, dt * 5); });
+}
+// lo que cuelga en la cámara fría y las cajas en las tarimas salen de la producción real (kilos y pedidos por ruta)
+const kgTexto = kg => Math.round(kg).toLocaleString("es-CR") + " kg";
+function actualizarPlanta() {
+  const d = diapos().find(x => /^Producción/.test(x.titulo || "")), filas = (d && d.filas) || [], cols = (d && d.columnas) || [];
+  const kg = cat => { const f = filas.find(r => r[0] === cat); return f ? parseFloat(String(f[f.length - 1]).replace(/[^\d.]/g, "")) || 0 : 0; };
+  const pedidos = filas.find(r => r[0] === "Órdenes") || [];
+  const cuantos = (kilos, por, max, min) => !d ? Math.ceil(max / 2) : kilos <= 0 ? 0 : Math.max(min, Math.min(max, Math.round(kilos / por)));
+  const K = { res: kg("Res"), cerdo: kg("Cerdo"), pollo: kg("Pollo") };
+  colgados.res.forEach((g, i) => g.visible = i < cuantos(K.res, 180, 6, 1));
+  colgados.cerdo.forEach((g, i) => g.visible = i < cuantos(K.cerdo, 110, 6, 1));
+  colgados.pollo.forEach((g, i) => g.visible = i < cuantos(K.pollo, 90, 12, 2));
+  rotulos.res.userData.poner(d ? `🐄 Res · ${kgTexto(K.res)}` : "🐄 Res");
+  rotulos.cerdo.userData.poner(d ? `🐖 Cerdo · ${kgTexto(K.cerdo)}` : "🐖 Cerdo");
+  rotulos.pollo.userData.poner(d ? `🐔 Pollo · ${kgTexto(K.pollo)}` : "🐔 Pollo");
+  tarimas.forEach(tm => {
+    const n = parseInt(pedidos[cols.indexOf(tm.ruta)]) || 0;
+    tm.cajas.forEach((b, i) => b.visible = i < (d ? Math.min(12, Math.ceil(n / 3)) : 4));
+    tm.rotulo.userData.poner(d ? `${tm.ruta} · ${n} pedido${n === 1 ? "" : "s"}` : tm.ruta);
+  });
+}
+actualizarPlanta();
+
+// =====================================================================================
+//  Estado vivo (agentes.js) y demostración
+// =====================================================================================
+let modoDemo = location.hash === "#demo", demoPaso = 0;
+function aplicar() {
+  const P = window.PANEL; if (!P) return;
+  Object.keys(P.equipo).forEach((id, i) => { if (!gente[id]) gente[id] = crearAgente(id, i, P.equipo[id]); });
+  for (const [id, p] of Object.entries(gente)) {
+    const est = (P.estado || {})[id] || {};
+    let estado = est.estado || "listo";
+    // en línea se compara con la hora en que se armaron los datos, no con la de quien mira
+    const ref = enLinea && P.generado ? new Date(P.generado) : new Date();
+    if (estado === "trabajando" && est.desde && (ref - fechaCR(est.desde)) / 60000 > (P.sin_aviso_min || 20)) estado = "problema";
+    p.estado = estado; p.tarea = est.tarea || p.ag.descanso; p.detalle = est.detalle || "";
+    const d = destino(id, estado, p.tarea);
+    const clave = d ? d.slice(0, 2).join(",") + estado : "libre";
+    if (clave !== p.objetivo) {
+      p.objetivo = clave;
+      if (d) { p.destinoX = null; irA(p, d[0] + (id.length % 3 - 1) * 0.35, d[1], d[2], d[3]); p.espera = 1e9; }
+      else p.espera = 0.5;
+    }
+  }
+  const ids = Object.keys(gente);
+  const trab = ids.filter(id => gente[id].estado === "trabajando").map(id => gente[id].ag.nombre);
+  const ayuda = ids.filter(id => gente[id].estado === "problema").map(id => gente[id].ag.nombre);
+  // en línea: decir de cuándo son los datos, y avisar si la computadora dejó de mandarlos
+  let nube = "";
+  if (enLinea) {
+    // la revisión corre de 7:00 a 19:00: de noche es normal que no lleguen datos nuevos
+    const min = P.generado ? (Date.now() - new Date(P.generado)) / 60000 : null, h = horaCR().getHours();
+    const cuando = P.generado && new Date(P.generado).toLocaleString("es-CR", { ...HORA, day: "numeric", month: "numeric" });
+    const alerta = min !== null && min > 90 && h >= 8 && h < 20;
+    nube = min === null ? "Conectando con la oficina… · "
+         : alerta ? `⚠ Sin datos nuevos desde el ${cuando} · `
+         : min > 90 ? `Datos del ${cuando} · `
+         : `Actualizado ${new Date(P.generado).toLocaleTimeString("es-CR", HORA)} · `;
+    document.getElementById("estado").classList.toggle("viejo", alerta);
+  }
+  document.getElementById("estado").textContent = nube + (modoDemo ? "🎬 DEMOSTRACIÓN · " : "") +
+    (ayuda.length ? "⚠ Necesitan ayuda: " + ayuda.join(", ") + " · " : "") +
+    (trab.length ? "Trabajando: " + trab.join(", ") : hayNoche() ? "Fuera de horario: el equipo descansa 💤" : "Todos al día");
+  pintarPruebas();   // por aquí pasan todos los datos nuevos (agentes.js, la web con PIN y claude.ai)
+}
+const DEMO = [
+  ["vigilante", "trabajando", "Revisando Oracle: buscando órdenes nuevas"],
+  ["impresor", "trabajando", "Imprimiendo la orden 1100000", "Escuela de ejemplo"],
+  ["produccion", "trabajando", "Mandando el resumen de producción a la planta"],
+  ["facturador", "trabajando", "Metiendo en QuPOS la factura de Escuelas"],
+  ["cobros", "trabajando", "Revisando 'Ver pagos' del CNP en Oracle"],
+  ["codigos", "trabajando", "Mandando el informe de códigos pendientes"],
+  ["facturador", "esperando", "La factura está lista en QuPOS: falta que le des F2"],
+  ["impresor", "problema", "La impresora no tiene papel", "Ponele papel y sale sola"],
+  ["redes", "trabajando", "Grabando un Reel de la tamaleada", "Con el aro de luz y la tabla de picar"],
+  ["redes", "trabajando", "Programando las publicaciones en Business Suite", "Lo que entra en los próximos 29 días"],
+];
+function pasoDemo() {
+  if (!modoDemo || !window.PANEL) return;
+  const ahora = new Date().toISOString(), e = {};
+  for (const k of [0, 3]) { const [a, s, t, d] = DEMO[(demoPaso + k) % DEMO.length]; e[a] = { estado: s, tarea: t, detalle: d || "", desde: ahora }; }
+  PANEL.estado = e; demoPaso++; aplicar();
+}
+function recargar() {
+  if (modoDemo || enLinea) return;
+  const s = document.createElement("script"); s.src = "agentes.js?t=" + Date.now();
+  s.onload = () => { aplicar(); s.remove(); }; s.onerror = () => s.remove(); document.head.appendChild(s);
+}
+document.getElementById("bDemo").onclick = () => { modoDemo = !modoDemo; document.getElementById("bDemo").classList.toggle("activo", modoDemo); if (modoDemo) pasoDemo(); else recargar(); };
+document.getElementById("bDemo").classList.toggle("activo", modoDemo);
+
+// =====================================================================================
+//  Diapositivas (pantallas de la pared y presentación a pantalla completa)
+// =====================================================================================
+const SEG_DIAPO = 9;
+function diapos() { return ((window.PANEL || {}).datos || {}).diapositivas || []; }
+const LARGAS = /cliente|qué|grupo|cerrado|monto sin|publicaci/i;   // columnas de texto largo: más anchas y pueden partirse en renglones
+const tono = v => /caduc|aprobar|sin papel|error|apagad|sin conexi|detenid|falta programar|fall[óo]/i.test(v) ? "malo"
+                : /\bactiva|lista|encendida|al día|^programada|funcion[óo]/i.test(v) ? "bien" : "";
+// las tarjetas que dicen lo que falta ("Falta programar": 2) se pintan por el número: 0 está bien, más de 0 no
+const tonoTarjeta = (k, v) => { const s = String(v ?? "").trim();
+  return tono(s) || (/^falta/i.test(k) ? (/^(0|nada|ninguna)(\D|$)/i.test(s) ? "bien" : /^\d/.test(s) ? "malo" : "") : ""); };
+const COL_ESTADO = c => /^estado$/i.test(c);   // en esa columna cada celda se pinta con tono()
+function recortar(g, t, max) {
+  t = String(t ?? ""); if (g.measureText(t).width <= max) return t;
+  while (t.length > 1 && g.measureText(t + "…").width > max) t = t.slice(0, -1);
+  return t + "…";
+}
+function dibujarDiapo(g, W, H, d, i, total, avance) {
+  const s = W / 1600;
+  const fondo = g.createLinearGradient(0, 0, W, H); fondo.addColorStop(0, "#0b1530"); fondo.addColorStop(1, "#13244a");
+  g.fillStyle = fondo; g.fillRect(0, 0, W, H); g.textBaseline = "middle"; g.textAlign = "left";
+  if (!d) { g.fillStyle = "#cbd5e1"; g.font = `600 ${48 * s}px Segoe UI, Arial`; g.textAlign = "center"; g.fillText("Esperando datos…", W / 2, H / 2); g.textAlign = "left"; g.textBaseline = "alphabetic"; return; }
+  // encabezado
+  g.fillStyle = "rgba(255,255,255,.06)"; g.fillRect(0, 0, W, 140 * s);
+  g.font = `${78 * s}px Segoe UI Emoji, Segoe UI, sans-serif`; g.fillStyle = "#fff"; g.fillText(d.icono || "", 46 * s, 72 * s);
+  g.font = `800 ${58 * s}px Segoe UI, Arial`; g.fillText(recortar(g, d.titulo, 1150 * s), 150 * s, d.sub ? 56 * s : 72 * s);
+  if (d.sub) { g.font = `500 ${30 * s}px Segoe UI, Arial`; g.fillStyle = "#93c5fd"; g.fillText(recortar(g, d.sub, 1400 * s), 152 * s, 108 * s); }
+  g.textAlign = "right"; g.font = `600 ${28 * s}px Segoe UI, Arial`; g.fillStyle = "#94a3b8";
+  g.fillText(new Date().toLocaleTimeString("es-CR", HORA), W - 40 * s, 56 * s); g.textAlign = "left";
+  let y = 180 * s;
+  // tarjetas: solas van grandes, de dos en dos; con una tabla abajo van en una fila, más bajitas, y la tabla empieza debajo
+  if (d.tarjetas) {
+    const chica = !!d.columnas, porFila = chica ? Math.max(1, Math.min(4, d.tarjetas.length)) : 2, sep = (chica ? 24 : 40) * s;
+    const cw = (W - 80 * s - (porFila - 1) * sep) / porFila, ch = (chica ? 150 : 250) * s, sepY = (chica ? 20 : 36) * s;
+    d.tarjetas.forEach(([k, v], j) => {
+      const x = 40 * s + (j % porFila) * (cw + sep), yy = y + Math.floor(j / porFila) * (ch + sepY);
+      const t = tonoTarjeta(k, v), malo = t === "malo", bien = t === "bien";
+      g.fillStyle = malo ? "rgba(220,38,38,.25)" : bien ? "rgba(22,163,74,.2)" : "rgba(255,255,255,.07)";
+      g.beginPath(); g.roundRect(x, yy, cw, ch, 24 * s); g.fill();
+      g.fillStyle = "#cbd5e1"; g.font = `600 ${(chica ? 26 : 34) * s}px Segoe UI, Arial`; g.fillText(recortar(g, k, cw - (chica ? 50 : 70) * s), x + (chica ? 26 : 36) * s, yy + (chica ? 44 : 66) * s);
+      let f = (chica ? 52 : 68) * s;   // la cifra se achica hasta caber (y si ni así, se recorta)
+      g.font = `800 ${f}px Segoe UI, Arial`;
+      while (chica && f > 30 * s && g.measureText(String(v ?? "")).width > cw - 50 * s) { f -= 2 * s; g.font = `800 ${f}px Segoe UI, Arial`; }
+      g.fillStyle = malo ? "#fca5a5" : bien ? "#86efac" : "#fff"; g.fillText(recortar(g, v, cw - (chica ? 50 : 70) * s), x + (chica ? 26 : 36) * s, yy + (chica ? 106 : 160) * s);
+    });
+    if (chica) y += Math.ceil(d.tarjetas.length / porFila) * (ch + sepY) + 10 * s;
+  }
+  // número grande a la izquierda de la tabla
+  let izq = 40 * s;
+  if (d.grande !== undefined) {
+    g.fillStyle = "#fff"; g.font = `800 ${150 * s}px Segoe UI, Arial`; g.fillText(d.grande, 50 * s, y + 90 * s);
+    g.fillStyle = "#93c5fd"; g.font = `600 ${30 * s}px Segoe UI, Arial`;
+    String(d.grande_txt || "").split(" ").reduce((ls, w) => { const u = ls[ls.length - 1]; if (u && (u + " " + w).length <= 14) ls[ls.length - 1] = u + " " + w; else ls.push(w); return ls; }, [])
+      .forEach((l, k) => g.fillText(l, 56 * s, y + (200 + k * 38) * s));
+    izq = 400 * s;
+  }
+  // barra de avance (escuelas hacia el tope de la factura)
+  if (d.barra !== undefined) {
+    g.fillStyle = "rgba(255,255,255,.12)"; g.beginPath(); g.roundRect(40 * s, y, W - 80 * s, 46 * s, 23 * s); g.fill();
+    g.fillStyle = d.barra >= 100 ? "#22c55e" : "#a78bfa"; g.beginPath(); g.roundRect(40 * s, y, Math.max(46 * s, (W - 80 * s) * Math.min(100, d.barra) / 100), 46 * s, 23 * s); g.fill();
+    g.fillStyle = "#fff"; g.font = `700 ${34 * s}px Segoe UI, Arial`; g.fillText(recortar(g, `${d.barra}% · ${d.barra_txt || ""}`, W - 120 * s), 50 * s, y + 92 * s);
+    y += 140 * s;
+  }
+  // tabla
+  const filas = d.filas || [];
+  if (d.columnas) {
+    const x0 = izq, ancho = W - x0 - 40 * s, n = d.columnas.length;
+    const pesos = d.columnas.map((c, j) => LARGAS.test(c) ? 3 : /^(sin iva|monto|estado)$/i.test(c) ? 1.7 : j === 0 && n <= 3 ? 1.4 : 1);
+    const suma = pesos.reduce((a, b) => a + b, 0), xs = []; let acc = x0;
+    pesos.forEach(p => { xs.push(acc); acc += ancho * p / suma; });
+    const alto = Math.min(66 * s, (H - y - 90 * s) / (Math.min(filas.length, 8) + 1));
+    g.fillStyle = "#64748b"; g.font = `700 ${Math.min(26 * s, alto * 0.45)}px Segoe UI, Arial`;
+    d.columnas.forEach((c, j) => g.fillText(recortar(g, c.toUpperCase(), (j + 1 < xs.length ? xs[j + 1] : x0 + ancho) - xs[j] - 20 * s), xs[j] + 14 * s, y + alto * 0.5));
+    if (!filas.length) { g.fillStyle = "#86efac"; g.font = `700 ${40 * s}px Segoe UI, Arial`; g.fillText(recortar(g, d.vacio || "Nada que mostrar.", ancho - 30 * s), x0 + 14 * s, y + alto * 1.8); }
+    filas.slice(0, 8).forEach((f, k) => {
+      const yy = y + alto * (k + 1), total = /^total/i.test(f[0]);
+      g.fillStyle = total ? "rgba(96,165,250,.22)" : k % 2 ? "rgba(255,255,255,.03)" : "rgba(255,255,255,.08)"; g.fillRect(x0, yy, ancho, alto);
+      f.forEach((v, j) => {
+        const t = j && COL_ESTADO(d.columnas[j] || "") ? tono(v) : "";
+        g.fillStyle = j === 0 ? "#bfdbfe" : t === "malo" ? "#fca5a5" : t === "bien" ? "#86efac" : "#f1f5f9";
+        g.font = `${j === 0 || total || t ? 700 : 500} ${Math.min(32 * s, alto * 0.5)}px Segoe UI, Arial`;
+        const w = (j + 1 < xs.length ? xs[j + 1] : x0 + ancho) - xs[j] - 24 * s;
+        g.fillText(recortar(g, v, w), xs[j] + 14 * s, yy + alto * 0.52);
+      });
+    });
+  }
+  // pie: puntitos y avance de la diapositiva
+  g.fillStyle = "rgba(255,255,255,.1)"; g.fillRect(0, H - 10 * s, W, 10 * s);
+  g.fillStyle = "#60a5fa"; g.fillRect(0, H - 10 * s, W * avance, 10 * s);
+  for (let k = 0; k < total; k++) { g.fillStyle = k === i ? "#fff" : "rgba(255,255,255,.3)"; g.beginPath(); g.arc(W / 2 + (k - (total - 1) / 2) * 34 * s, H - 40 * s, 9 * s, 0, 7); g.fill(); }
+  g.textBaseline = "alphabetic";
+}
+const diapoInicio = performance.now();
+let ultimoPintado = -1e9;
+function pintarPantallas(ahora) {
+  if (ahora - ultimoPintado < 1000) return; ultimoPintado = ahora;
+  const ds = diapos(), n = Math.max(1, ds.length), t = (ahora - diapoInicio) / 1000;
+  // la pantalla grande: el tablero (12 s) y después tres diapositivas (9 s cada una), y así sucesivamente
+  const turnos = []; for (let k = 0; k < n; k++) { if (k % 3 === 0) turnos.push(["T", 12]); turnos.push([k, SEG_DIAPO]); }
+  const largo = turnos.reduce((a, x) => a + x[1], 0); let r = t % largo, e = 0;
+  while (r >= turnos[e][1]) { r -= turnos[e][1]; e++; }
+  const [cual, dura] = turnos[e], i = cual === "T" ? -1 : cual;
+  if (cual === "T") dibujarTablero(pantallaTex.userData.g, 1280, 720, r / dura);
+  else dibujarDiapo(pantallaTex.userData.g, 1280, 720, ds[i], i, n, r / dura);
+  pantallaTex.needsUpdate = true;
+  // la pantalla chica alterna lo más importante: estado general, facturación y órdenes de hoy
+  const fijas = ds.filter(d => /Así está|Facturación pendiente|Órdenes impresas/.test(d.titulo || "")), m = Math.max(1, fijas.length);
+  const k = Math.floor(t / 12) % m;
+  dibujarDiapo(pantalla2Tex.userData.g, 1280, 720, fijas[k] || ds[0], k, m, (t % 12) / 12); pantalla2Tex.needsUpdate = true;
+  // la pantalla de la sala de deshuese: lo que hay que empacar, por ruta
+  dibujarDiapo(pantallaProdTex.userData.g, 1280, 720, ds.find(d => /^Producción/.test(d.titulo || "")), 0, 1, (t % 12) / 12); pantallaProdTex.needsUpdate = true;
+  actualizarPlanta();
+}
+
+// Monitor de cada cubículo: quién es, qué está haciendo y sus dos números principales
+function pintarMonitores() {
+  const P = window.PANEL || {}, D = P.datos || {};
+  for (const [id, tex] of Object.entries(monitores)) {
+    const { g } = tex.userData, ag = (P.equipo || {})[id] || { nombre: id, color: "#64748b", icono: "" }, p = gente[id];
+    const est = p ? p.estado : "listo";
+    g.fillStyle = "#0b1220"; g.fillRect(0, 0, 512, 300);
+    g.fillStyle = ag.color; g.fillRect(0, 0, 512, 62); g.textBaseline = "middle";
+    g.fillStyle = "#fff"; g.font = "800 36px Segoe UI, Arial"; g.fillText(recortar(g, `${ag.icono || ""} ${ag.nombre}`, 480), 16, 33);
+    g.font = "600 24px Segoe UI, Arial"; g.fillStyle = { trabajando: "#86efac", esperando: "#fcd34d", problema: "#fca5a5" }[est] || "#cbd5e1";
+    g.fillText(recortar(g, est === "listo" ? "✓ Al día" : p.tarea, 480), 16, 96);
+    ((D[id] || {}).kpis || []).slice(0, 2).forEach(([k, v], j) => {
+      g.fillStyle = "#94a3b8"; g.font = "600 21px Segoe UI, Arial"; g.fillText(recortar(g, k, 480), 16, 150 + j * 76);
+      g.fillStyle = { malo: "#fca5a5", bien: "#86efac" }[tono(v)] || "#fff"; g.font = "800 31px Segoe UI, Arial"; g.fillText(recortar(g, v, 480), 16, 184 + j * 76);
+    });
+    g.textBaseline = "alphabetic"; tex.needsUpdate = true;
+  }
+  // el cartel del rincón de redes avisa si hay publicaciones sin programar
+  const faltan = +((D.redes || {}).faltan_programar) || 0;
+  rotuloRedes.userData.poner(faltan > 0 ? `📣 Redes · ${faltan} sin programar` : "📣 Redes");
+}
+
+// Presentación a pantalla completa (botón 📺, clic en una pantalla o Oficina.html#presentacion).
+// Es HTML y no un dibujo, para que en el celular las letras se acomoden y se lean bien.
+const capaPres = document.getElementById("presentacion"), cajaDiapo = document.getElementById("diapo");
+const avancePres = document.getElementById("presAvance"), puntosPres = document.getElementById("presPuntos"), bPausa = document.getElementById("presPausa");
+let presAbierta = false, presIndice = 0, presInicio = 0, presVista = "", presPausada = false;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function htmlDiapo(d) {
+  if (!d) return `<div class="d-cab"><div class="d-tit">Esperando datos…</div></div>`;
+  let h = `<div class="d-cab"><div class="d-ico">${esc(d.icono)}</div><div><div class="d-tit">${esc(d.titulo)}</div>${d.sub ? `<div class="d-sub">${esc(d.sub)}</div>` : ""}</div></div>`;
+  // con tabla abajo, tarjetas chicas de 4 por fila (como en la pared): si no, la tabla quedaba debajo de los controles
+  if (d.tarjetas) h += `<div class="d-tarjetas${d.columnas ? " chicas" : ""}">${d.tarjetas.map(([k, v]) => `<div class="d-tarjeta ${tonoTarjeta(k, v)}"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")}</div>`;
+  if (d.barra !== undefined) h += `<div class="d-barra"><div class="${d.barra >= 100 ? "lleno" : ""}" style="width:${Math.max(3, Math.min(100, +d.barra || 0))}%"></div></div><div class="d-barra-txt">${esc(d.barra)}% · ${esc(d.barra_txt)}</div>`;
+  let cuerpo = "";
+  if (d.grande !== undefined) cuerpo += `<div class="d-grande"><b>${esc(d.grande)}</b><span>${esc(d.grande_txt)}</span></div>`;
+  if (d.columnas) {
+    const filas = d.filas || [], largo = d.columnas.map(c => LARGAS.test(c) ? "largo" : ""), conTono = d.columnas.map((c, j) => j > 0 && COL_ESTADO(c));
+    cuerpo += `<div class="d-tabla"><table><thead><tr>${d.columnas.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>` +
+      (filas.length ? filas.map(f => `<tr class="${/^total/i.test(f[0]) ? "total" : ""}">${f.map((v, j) => `<td class="${largo[j] || ""}${conTono[j] ? " estado " + tono(v) : ""}">${esc(v)}</td>`).join("")}</tr>`).join("")
+                    : `<tr><td class="vacio" colspan="${d.columnas.length}">${esc(d.vacio || "Nada que mostrar.")}</td></tr>`) + `</tbody></table></div>`;
+  }
+  return h + (cuerpo ? `<div class="d-cuerpo">${cuerpo}</div>` : "");
+}
+function abrirPresentacion(indice) {
+  presAbierta = true; presInicio = performance.now(); presVista = "";
+  presIndice = indice >= 0 ? indice : Math.floor((presInicio - diapoInicio) / 1000 / SEG_DIAPO) % Math.max(1, diapos().length);
+  capaPres.style.display = "flex";
+}
+function cerrarPresentacion() { presAbierta = false; capaPres.style.display = "none"; if (location.hash === "#presentacion") history.replaceState(null, "", location.pathname + location.search); }
+function moverPres(d) { const n = Math.max(1, diapos().length); presIndice = (presIndice + d + n) % n; presInicio = performance.now(); }
+function pintarPresentacion(ahora) {
+  if (!presAbierta) return;
+  const ds = diapos(), n = Math.max(1, ds.length), dura = SEG_DIAPO + 3;
+  if (presPausada) presInicio = ahora - 1;
+  else if ((ahora - presInicio) / 1000 > dura) moverPres(1);
+  const i = presIndice % n, clave = i + "|" + ((window.PANEL || {}).datos || {}).actualizado;
+  if (clave !== presVista) {   // solo se vuelve a armar cuando cambia la diapositiva o llegan datos nuevos
+    presVista = clave; cajaDiapo.innerHTML = htmlDiapo(ds[i]); capaPres.scrollTop = 0;
+    puntosPres.innerHTML = ds.map((_, k) => `<span class="${k === i ? "si" : ""}"></span>`).join("");
+  }
+  avancePres.style.width = Math.min(100, (ahora - presInicio) / 10 / dura) + "%";
+}
+document.getElementById("bPres").onclick = abrirPresentacion;
+document.getElementById("presCerrar").onclick = cerrarPresentacion;
+document.getElementById("presAnt").onclick = () => moverPres(-1);
+document.getElementById("presSig").onclick = () => moverPres(1);
+bPausa.onclick = () => { presPausada = !presPausada; bPausa.textContent = presPausada ? "▶" : "⏸"; bPausa.title = presPausada ? "Seguir" : "Pausar"; };
+addEventListener("keydown", e => { if (!presAbierta || capaTablero.style.display === "block" || pruebasAbierta()) return; if (e.key === "Escape") cerrarPresentacion(); if (e.key === "ArrowRight") moverPres(1); if (e.key === "ArrowLeft") moverPres(-1); });
+let toqueX = null;   // en el celular: deslizar para pasar
+capaPres.addEventListener("touchstart", e => { toqueX = e.touches[0].clientX; }, { passive: true });
+capaPres.addEventListener("touchend", e => { if (toqueX === null) return; const dx = e.changedTouches[0].clientX - toqueX; toqueX = null; if (Math.abs(dx) > 50) moverPres(dx < 0 ? 1 : -1); });
+
+// =====================================================================================
+//  Tablero (dashboard): la caja, la producción, la facturación y los pagos en un vistazo.
+//  Gráficos finos en SVG, con la cifra al pasar el dedo y "Ver tabla" debajo de cada uno.
+// =====================================================================================
+const TBC = { tinta: "#f0efec", tinta2: "#c3c2b7", tenue: "#898781", rejilla: "#2c2c2a", eje: "#383835", sup: "#1a1a19",
+              s: ["#3987e5", "#d95926", "#199e70", "#c98500"] };   // azul, naranja, aqua (y amarillo para "Sin provincia"): validados para daltonismo
+const colon = v => "₡" + Math.round(+v || 0).toLocaleString("en-US");
+const colonCorto = v => { v = +v || 0; return v >= 1e6 ? "₡" + (v / 1e6).toFixed(v >= 1e7 ? 1 : 2) + " M" : v >= 1e3 ? "₡" + Math.round(v / 1e3) + " mil" : "₡" + Math.round(v); };
+const kgTxt = v => (Math.round(v * 10) / 10).toLocaleString("en-US") + " kg";
+const diaCorto = iso => new Date(iso + "T12:00:00").toLocaleDateString("es-CR", { day: "numeric", month: "short" }).replace(".", "");
+const mesCorto = ym => new Date(ym + "-15T12:00:00").toLocaleDateString("es-CR", { month: "short", year: "2-digit" }).replace(".", "");
+function marcas(max, n = 4) {   // rayas del eje en números redondos
+  if (!(max > 0)) return [0, 1];
+  const bruto = max / n, p = Math.pow(10, Math.floor(Math.log10(bruto))), paso = [1, 2, 2.5, 5, 10].map(k => k * p).find(k => k >= bruto);
+  const r = []; for (let v = 0; v <= max + paso * 0.001; v += paso) r.push(v); if (r[r.length - 1] < max) r.push(r[r.length - 1] + paso); return r;
+}
+const ejeTxt = v => v >= 1e6 ? (v / 1e6).toLocaleString("en-US", { maximumFractionDigits: 1 }) + " M" : v >= 1e3 ? Math.round(v / 1e3) + " mil" : String(v);
+function tablaHtml(cols, filas) {
+  return `<details class="tb-tabla"><summary>Ver tabla</summary><div><table><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>` +
+         `<tbody>${filas.map(f => `<tr>${f.map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`;
+}
+function columna(x, y, w, base) {   // barra con la punta redondeada (4px) y la base recta
+  const r = Math.min(4, w / 2, Math.max(0, base - y));
+  return `M${x},${base}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${base}Z`;
+}
+// Línea con área tenue: una sola serie (el título dice qué es); cruz y punto al pasar el dedo.
+function graficoLinea(serie, fmt, W = 640, alto = 190) {
+  const H = alto, iz = 52, de = 14, ar = 12, ab = 26, w = W - iz - de, h = H - ar - ab;
+  const max = Math.max(...serie.map(p => p[1]), 1), mk = marcas(max), tope = mk[mk.length - 1];
+  const X = i => iz + (serie.length === 1 ? w / 2 : i * w / (serie.length - 1)), Y = v => ar + h - v / tope * h;
+  const pts = serie.map((p, i) => `${X(i).toFixed(1)},${Y(p[1]).toFixed(1)}`);
+  const u = serie.length - 1, paso = w / Math.max(1, serie.length - 1);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de línea">`;
+  mk.forEach(v => { s += `<line x1="${iz}" x2="${W - de}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v ? TBC.rejilla : TBC.eje}" stroke-width="1"/>` +
+                         `<text x="${iz - 8}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="${TBC.tenue}" style="font-variant-numeric:tabular-nums">${ejeTxt(v)}</text>`; });
+  (W < 420 ? [0, u] : [0, Math.floor(u / 2), u]).forEach(i => { s += `<text x="${X(i)}" y="${H - 6}" text-anchor="${i === 0 ? "start" : i === u ? "end" : "middle"}" font-size="11" fill="${TBC.tenue}">${diaCorto(serie[i][0])}</text>`; });
+  s += `<path d="M${X(0)},${Y(0)}L${pts.join("L")}L${X(u)},${Y(0)}Z" fill="${TBC.s[0]}" fill-opacity=".10"/>`;
+  s += `<polyline points="${pts.join(" ")}" fill="none" stroke="${TBC.s[0]}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  s += `<circle cx="${X(u)}" cy="${Y(serie[u][1])}" r="4.5" fill="${TBC.s[0]}" stroke="${TBC.sup}" stroke-width="2"/>`;
+  s += `<line class="tb-cruz" x1="0" x2="0" y1="${ar}" y2="${ar + h}" stroke="${TBC.tinta2}" stroke-width="1" visibility="hidden"/>`;
+  s += `<circle class="tb-punto" r="4.5" fill="${TBC.s[0]}" stroke="${TBC.sup}" stroke-width="2" visibility="hidden"/>`;
+  serie.forEach((p, i) => { s += `<rect x="${X(i) - paso / 2}" y="${ar}" width="${paso}" height="${h}" fill="transparent" data-tip="${esc(diaCorto(p[0]))}: <b>${esc(fmt(p[1]))}</b>" data-cx="${X(i)}" data-cy="${Y(p[1])}"/>`; });
+  return s + `</svg>`;
+}
+// Columnas (una serie): <= 24 px de grueso, valor del último día escrito arriba.
+function graficoColumnas(serie, fmt, etiqueta, W = 640, alto = 190) {
+  const H = alto, iz = 40, de = 8, ar = 18, ab = 26, w = W - iz - de, h = H - ar - ab;
+  const max = Math.max(...serie.map(p => p[1]), 1), mk = marcas(max), tope = mk[mk.length - 1];
+  const banda = w / serie.length, ancho = Math.min(24, banda * 0.62), Y = v => ar + h - v / tope * h, base = ar + h;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de columnas">`;
+  mk.forEach(v => { s += `<line x1="${iz}" x2="${W - de}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v ? TBC.rejilla : TBC.eje}" stroke-width="1"/>` +
+                         `<text x="${iz - 8}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="${TBC.tenue}" style="font-variant-numeric:tabular-nums">${ejeTxt(v)}</text>`; });
+  serie.forEach((p, i) => {
+    const x = iz + i * banda + (banda - ancho) / 2;
+    if (p[1] > 0) s += `<path d="${columna(x, Y(p[1]), ancho, base)}" fill="${TBC.s[0]}"/>`;
+    const cada = Math.ceil(serie.length / Math.max(2, Math.floor((W - iz) / 64)));
+    if ((i % cada === 0 && serie.length - 1 - i >= cada / 2) || i === serie.length - 1)
+      s += `<text x="${x + ancho / 2}" y="${H - 6}" text-anchor="middle" font-size="11" fill="${TBC.tenue}">${etiqueta(p[0])}</text>`;
+    s += `<rect x="${iz + i * banda}" y="${ar}" width="${banda}" height="${h}" fill="transparent" data-tip="${esc(etiqueta(p[0]))}: <b>${esc(fmt(p[1]))}</b>"/>`;
+  });
+  const u = serie[serie.length - 1], xu = iz + (serie.length - 1) * banda + banda / 2;
+  if (u) {   // la cifra de la última columna, solo si no se monta sobre la barra anterior (si no, la dan el globo y la tabla)
+    const L = fmt(u[1]).length * 6.8, borde = xu + L / 2 > W, izq = borde ? W - L : xu - L / 2;
+    const ant = serie[serie.length - 2], finAnt = iz + (serie.length - 2) * banda + (banda + ancho) / 2 + 3;
+    if (!ant || izq >= finAnt || Y(ant[1]) > Y(u[1]) - 4)
+      s += `<text x="${borde ? W : xu}" y="${Y(u[1]) - 6}" text-anchor="${borde ? "end" : "middle"}" font-size="11.5" font-weight="650" fill="${TBC.tinta}">${esc(fmt(u[1]))}</text>`;
+  }
+  return s + `</svg>`;
+}
+// Barras horizontales: categorías sin orden (medios de pago) en un solo color, el valor en la punta.
+function graficoBarras(filas, fmt, W = 640) {
+  // en pantallas angostas el nombre va encima de la barra (si no, los nombres largos se montan en ella)
+  const angosto = W < 460, fila = angosto ? 46 : 34, iz = angosto ? 0 : Math.min(190, Math.round(W * 0.4)), de = 76;
+  const H = filas.length * fila + 4, w = W - iz - de, max = Math.max(...filas.map(f => f[1]), 1);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de barras">`;
+  filas.forEach(([nombre, v], i) => {
+    const y = i * fila + (angosto ? 22 : 8), largo = Math.max(2, v / max * w);
+    s += `<text x="0" y="${angosto ? y - 6 : y + 13}" font-size="13" fill="${TBC.tinta2}">${esc(nombre)}</text>`;
+    s += `<path d="M${iz},${y}H${iz + largo - 4}Q${iz + largo},${y} ${iz + largo},${y + 4}V${y + 14}Q${iz + largo},${y + 18} ${iz + largo - 4},${y + 18}H${iz}Z" fill="${TBC.s[0]}"/>`;
+    s += `<text x="${iz + largo + 8}" y="${y + 13}" font-size="12.5" fill="${TBC.tinta}" style="font-variant-numeric:tabular-nums">${esc(fmt(v))}</text>`;
+    s += `<rect x="0" y="${y - (angosto ? 20 : 6)}" width="${W}" height="${fila}" fill="transparent" data-tip="${esc(nombre)}: <b>${esc(colon(v))}</b>"/>`;
+  });
+  return s + `</svg>`;
+}
+// Barras apiladas: kilos de cada carne repartidos por ruta (3 colores con leyenda, 2 px de separación).
+function graficoApiladas(cats, rutas, valor, W = 640) {
+  const fila = 42, iz = 62, de = 84, H = cats.length * fila + 4, w = W - iz - de;
+  const totales = cats.map(c => rutas.reduce((a, r) => a + valor(c, r), 0)), max = Math.max(...totales, 1);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Kilos por carne y por ruta">`;
+  cats.forEach((c, i) => {
+    const y = i * fila + 8; let x = iz;
+    s += `<text x="0" y="${y + 15}" font-size="13.5" fill="${TBC.tinta2}">${esc(c)}</text>`;
+    rutas.forEach((r, k) => {
+      const v = valor(c, r), largo = v / max * w; if (largo < 0.5) return;
+      const ancho = Math.max(1, largo - (k < rutas.length - 1 ? 2 : 0)), ult = rutas.slice(k + 1).every(q => valor(c, q) / max * w < 0.5);
+      const col = TBC.s[k] || TBC.tenue;
+      s += ult ? `<path d="M${x},${y}H${x + ancho - 4}Q${x + ancho},${y} ${x + ancho},${y + 4}V${y + 18}Q${x + ancho},${y + 22} ${x + ancho - 4},${y + 22}H${x}Z" fill="${col}"/>`
+               : `<rect x="${x}" y="${y}" width="${ancho}" height="22" fill="${col}"/>`;
+      s += `<rect x="${x}" y="${y - 6}" width="${largo}" height="34" fill="transparent" data-tip="${esc(c)} · ${esc(r)}: <b>${esc(kgTxt(v))}</b>"/>`;
+      x += largo;
+    });
+    s += `<text x="${x + 8}" y="${y + 15}" font-size="12.5" fill="${TBC.tinta}" style="font-variant-numeric:tabular-nums">${esc(kgTxt(totales[i]))}</text>`;
+  });
+  return s + `</svg>`;
+}
+const delta = (ahora, antes, contra, periodo) => {
+  if (periodo && periodo.sin_cierres) return `<div class="tb-d">Todavía sin cierres en este período</div>`;
+  if (periodo && periodo.parcial) return `<div class="tb-d">Falta cerrar el resto del día: se compara cuando esté completo</div>`;
+  if (!antes) return `<div class="tb-d">Sin datos para comparar (${esc(contra)})</div>`;
+  const p = (ahora - antes) / antes * 100, sube = p >= 0;
+  return `<div class="tb-d"><b class="${sube ? "sube" : "baja"}">${sube ? "▲" : "▼"} ${Math.abs(p).toFixed(1)}%</b> contra ${esc(contra)} (${esc(colonCorto(antes))})</div>`;
+};
+let graficosTablero = [];
+const lugar = dibujo => `<div class="tb-graf" data-g="${graficosTablero.push(dibujo) - 1}"></div>`;
+function htmlTablero(T) {
+  graficosTablero = [];
+  const C = T.caja || {}, P = C.periodos, hay = !!P;   // si falló la última bajada se muestran los últimos datos con un aviso
+  const cuando = T.actualizado ? new Date(T.actualizado).toLocaleString("es-CR", { ...HORA, day: "numeric", month: "short" }) : "—";
+  let h = `<div class="tb-cab"><h1>Carnicería La Confianza</h1><span>Actualizado ${esc(cuando)} · los datos llegan cada 15 minutos</span></div>`;
+  if (T.error) h += `<div class="tb-grid" style="margin-top:14px"><div class="tb-c w12"><div class="tb-et">No pude armar el tablero</div><p class="tb-aviso">${esc(T.error)}</p></div></div>`;
+  // --- caja ---
+  const hoyCR = new Date().toLocaleDateString("en-CA", { timeZone: "America/Costa_Rica" });
+  const diaCaja = C.actualizado ? new Date(C.actualizado).toLocaleDateString("en-CA", { timeZone: "America/Costa_Rica" }) : "";
+  const viejaCaja = hay && (C.error || diaCaja !== hoyCR);
+  const avisoCaja = viejaCaja ? ` · <span style="color:var(--alerta)">⚠ datos de caja del ${esc(new Date(C.actualizado).toLocaleString("es-CR", { ...HORA, day: "numeric", month: "short" }))}${C.error ? (/^ClaveMala/.test(C.error) ? " (la clave guardada ya no sirve: correr configurar_caja.bat)" : " (no pude actualizarlos)") : ""}</span>` : "";
+  h += `<div class="tb-sec">Cierre de caja${avisoCaja}</div><div class="tb-grid">`;
+  if (hay) {
+    const u = C.ultimo, est = u ? { Cuadrada: ["ok", "✓"], Sobrante: ["sob", "▲"], Faltante: ["mal", "▼"] }[u.estado] || ["", ""] : null;
+    h += `<div class="tb-c w6 tb-heroe"><div class="tb-et">Ventas del mes</div><div class="tb-v">${colon(P.mes.ventas)}</div>${delta(P.mes.ventas, P.mes.antes, P.mes.contra, P.mes)}</div>`;
+    const tHoy = P.hoy.fecha ? `${P.hoy.titulo} · ${diaCorto(P.hoy.fecha)}` : (P.hoy.titulo || "Hoy");
+    h += `<div class="tb-c"><div class="tb-et">${esc(tHoy)}</div><div class="tb-v">${colon(P.hoy.ventas)}</div>${delta(P.hoy.ventas, P.hoy.antes, P.hoy.contra, P.hoy)}` +
+         (P.hoy.sin_cierre_hoy ? `<div class="tb-d">Hoy todavía no se ha cerrado la caja</div>` : "") + `</div>`;
+    h += `<div class="tb-c"><div class="tb-et">Esta semana</div><div class="tb-v">${colon(P.semana.ventas)}</div>${delta(P.semana.ventas, P.semana.antes, P.semana.contra, P.semana)}</div>`;
+    const s30 = C.serie30 || [];   // empieza en el primer cierre si la app tiene menos de 30 días
+    const t30 = s30.length && s30.length < 30 ? `Ventas por día · desde el ${diaCorto(s30[0][0])}` : "Ventas por día · últimos 30 días";
+    h += `<div class="tb-c w8"><div class="tb-et">${esc(t30)}</div>${s30.length ? lugar(w => graficoLinea(s30, colon, w)) : `<div class="tb-d">Sin cierres todavía</div>`}` +
+         tablaHtml(["Día", "Ventas"], s30.slice().reverse().map(p => [diaCorto(p[0]), colon(p[1])])) + `</div>`;
+    const med = Object.entries(C.medios_mes || {}).sort((a, b) => b[1] - a[1]);
+    h += `<div class="tb-c w4"><div class="tb-et">Cómo pagaron este mes</div>${lugar(w => graficoBarras(med, colonCorto, w))}` +
+         tablaHtml(["Medio", "Monto"], med.map(([k, v]) => [k, colon(v)])) + `</div>`;
+    h += `<div class="tb-c w6 par"><div class="tb-et">Último cierre</div>` + (u ?
+         `<div class="tb-v">${colon(u.ventas)}</div><div class="tb-d">${esc(diaCorto(u.fecha))} · ${esc(u.turno)} · ${esc(u.cajero || "—")}</div>` +
+         `<div style="margin-top:10px"><span class="tb-chip ${est[0]}">${est[1]} ${esc(u.estado)}${u.estado === "Cuadrada" ? "" : " " + colon(Math.abs(u.dif))}</span></div>` : `<div class="tb-d">Sin cierres todavía</div>`) + `</div>`;
+    h += `<div class="tb-c"><div class="tb-et">Este año</div><div class="tb-v">${colonCorto(P["año"].ventas)}</div>${delta(P["año"].ventas, P["año"].antes, P["año"].contra, P["año"])}</div>`;
+    h += `<div class="tb-c"><div class="tb-et">Promedio por día (mes)</div><div class="tb-v">${colonCorto(C.promedio_dia_mes)}</div>` +
+         (C.mejor_dia_mes ? `<div class="tb-d">Mejor día: ${esc(diaCorto(C.mejor_dia_mes.fecha))}, ${esc(colonCorto(C.mejor_dia_mes.ventas))}</div>` : "") + `</div>`;
+  } else {
+    const sinClave = !C.error || /falta la clave/.test(C.error), claveMala = /^ClaveMala/.test(C.error || "");
+    const comoConectar = `en la computadora de la oficina: doble clic en <code>configurar_caja.bat</code> y entrar como cajero (la clave de la caja) o como dueño (el PIN de administrador).`;
+    if (T.error) h += `<div class="tb-c w12"><div class="tb-d">Sin datos de caja por ahora</div></div>`;
+    else if (claveMala) h += `<div class="tb-c w12"><div class="tb-et">La clave de la caja guardada no sirve</div><p class="tb-aviso">La app no la aceptó. Hay que volver a guardarla ${comoConectar}</p></div>`;
+    else if (!sinClave) h += `<div class="tb-c w12"><div class="tb-et">No pude leer el cierre de caja</div><p class="tb-aviso">${esc(C.error)}</p></div>`;
+    else h += `<div class="tb-c w12"><div class="tb-et">Falta conectar el cierre de caja</div><p class="tb-aviso">Para ver aquí las ventas del día, la semana y el mes hay que guardar una sola vez la clave ${comoConectar}</p></div>`;
+  }
+  h += `</div>`;
+  // --- producción y órdenes ---
+  const K = T.kilos || {}, cats = Object.keys(K), rutas = Object.keys(T.pedidos_ruta || {});
+  h += `<div class="tb-sec">Producción y órdenes</div><div class="tb-grid">`;
+  h += `<div class="tb-c${hay ? "" : " tb-heroe w6"}"><div class="tb-et">Pedidos por empacar</div><div class="tb-v">${T.pedidos_total ?? "—"}</div>` +
+       `<div class="tb-d">Entregas desde el ${T.desde ? esc(diaCorto(T.desde)) : "—"} · ${rutas.map(r => `${esc(r)} ${T.pedidos_ruta[r]}`).join(" · ")}</div></div>`;
+  h += `<div class="tb-c"><div class="tb-et">Órdenes impresas hoy</div><div class="tb-v">${T.impresas_hoy ?? 0}</div></div>`;
+  h += `<div class="tb-c"><div class="tb-et">Entregadas sin código</div><div class="tb-v">${esc((T.codigos || {}).sin_codigo ?? "—")}</div><div class="tb-d">La más antigua: ${esc((T.codigos || {}).mas_antigua ?? "—")}</div></div>`;
+  if (hay) h += `<div class="tb-c"><div class="tb-et">Último pago del CNP</div><div class="tb-v">${T.ultimo_pago ? colonCorto(T.ultimo_pago.monto) : "—"}</div><div class="tb-d">${T.ultimo_pago ? esc(T.ultimo_pago.fecha) + " · pago " + esc(T.ultimo_pago.numero) : ""}</div></div>`;
+  if (cats.length) {
+    h += `<div class="tb-c w6"><div class="tb-et">Kilos por empacar, por ruta</div><div class="tb-ley">${rutas.map((r, k) => `<span><i style="background:${TBC.s[k] || TBC.tenue}"></i>${esc(r)}</span>`).join("")}</div>` +
+         lugar(w => graficoApiladas(cats, rutas, (c, r) => K[c][r] || 0, w)) +
+         tablaHtml(["Carne", ...rutas, "Total"], cats.map(c => [c, ...rutas.map(r => kgTxt(K[c][r] || 0)), kgTxt(rutas.reduce((a, r) => a + (K[c][r] || 0), 0))])) + `</div>`;
+  }
+  const od = T.ordenes_dia || [];
+  h += `<div class="tb-c ${cats.length ? "w6" : "w12"}"><div class="tb-et">Órdenes de Oracle impresas por día · últimos 14 días</div>${lugar(w => graficoColumnas(od, v => `${v} órdenes`, diaCorto, w, 170))}` +
+       tablaHtml(["Día", "Órdenes"], od.slice().reverse().map(p => [diaCorto(p[0]), p[1]])) + `</div>`;
+  h += `</div>`;
+  // --- facturación y pagos ---
+  const F = T.facturacion || {}, kf = Object.fromEntries(F.kpis || []);
+  h += `<div class="tb-sec">Facturación y pagos</div><div class="tb-grid">`;
+  h += `<div class="tb-c w6"><div class="tb-et">Próxima factura de escuelas</div><div class="tb-v">${esc(kf["Escuelas cerradas"] || "—")}</div>` +
+       `<div class="tb-d">${esc(F.texto || "")}${kf.Meta ? " · meta " + esc(kf.Meta) : ""}</div>` +
+       `<div class="tb-medidor ${(F.progreso || 0) >= 100 ? "lleno" : ""}" role="meter" aria-valuenow="${F.progreso || 0}" aria-valuemin="0" aria-valuemax="100"><div style="width:${Math.min(100, F.progreso || 0)}%"></div></div>` +
+       `<ul class="tb-lista">${(F.lista || []).map(([a, b]) => `<li><span>${esc(a)}</span><span>${esc(b)}</span></li>`).join("")}</ul></div>`;
+  const pm = T.pagos_mes || [];
+  const up = T.ultimo_pago;
+  h += `<div class="tb-c w6"><div class="tb-et">Pagos del CNP por mes</div>` +
+       (up && !hay ? `<div class="tb-d">Último pago: <b style="color:var(--tinta)">${esc(colon(up.monto))}</b> el ${esc(up.fecha)} · pago ${esc(up.numero)}</div>` : "") +
+       (T.pagos_mes_parcial ? `<div class="tb-d">El primer mes está incompleto: se empezaron a anotar los pagos a medio mes</div>` : "") +
+       (pm.length ? lugar(w => graficoColumnas(pm, colon, mesCorto, w, 170)) + tablaHtml(["Mes", "Pagado"], pm.slice().reverse().map(p => [mesCorto(p[0]), colon(p[1])])) : `<div class="tb-d">Sin pagos anotados</div>`) + `</div>`;
+  return h + `</div>`;
+}
+const capaTablero = document.getElementById("tablero"), cuerpoTablero = document.getElementById("tbCuerpo"), tip = document.getElementById("tbTip");
+let tableroVisto = null;
+function pintarTablero() {
+  if (capaTablero.style.display !== "block") return;
+  const T = ((window.PANEL || {}).datos || {}).tablero, clave = T ? T.actualizado + "|" + ((T.caja || {}).actualizado || "") : "";
+  if (clave === tableroVisto) return;
+  tableroVisto = clave;
+  const abiertas = [...cuerpoTablero.querySelectorAll("details")].map(d => d.open);   // no cerrarle las tablas que tenía abiertas
+  cuerpoTablero.innerHTML = T ? htmlTablero(T) : `<div class="tb-cab"><h1>Carnicería La Confianza</h1><span>Esperando datos…</span></div>`;
+  cuerpoTablero.querySelectorAll("details").forEach((d, i) => d.open = !!abiertas[i]);
+  dibujarGraficos();
+}
+function dibujarGraficos() {
+  cuerpoTablero.querySelectorAll("[data-g]").forEach(el => { const w = Math.max(240, el.clientWidth); if (el.dataset.w != w) { el.dataset.w = w; el.innerHTML = graficosTablero[+el.dataset.g](w); } });
+}
+addEventListener("resize", () => { if (capaTablero.style.display === "block") dibujarGraficos(); });
+// abierto: el foco va al botón de cerrar y lo de atrás queda inactivo (el tabulador no se pierde detrás)
+function abrirTablero() {
+  capaTablero.style.display = "block"; tableroVisto = null; pintarTablero();
+  document.getElementById("barra").inert = true; capaPres.inert = true; document.getElementById("tbCerrar").focus();
+}
+function cerrarTablero() {
+  capaTablero.style.display = "none"; ocultarTip(); document.getElementById("barra").inert = false; capaPres.inert = false;
+  document.getElementById("bTablero").focus();
+  if (location.hash === "#tablero") history.replaceState(null, "", location.pathname + location.search);
+}
+document.getElementById("bTablero").onclick = abrirTablero;
+document.getElementById("tbCerrar").onclick = cerrarTablero;
+addEventListener("keydown", e => { if (e.key === "Escape" && capaTablero.style.display === "block") cerrarTablero(); });
+// la cifra al pasar el dedo o el mouse (con cruz y punto en el gráfico de línea)
+function ocultarTip() {
+  tip.style.display = "none";
+  cuerpoTablero.querySelectorAll(".tb-cruz, .tb-punto").forEach(x => x.setAttribute("visibility", "hidden"));
+}
+function mostrarTip(e) {
+  const r = e.target.closest && e.target.closest("[data-tip]"); const svg = r && r.ownerSVGElement;
+  cuerpoTablero.querySelectorAll(".tb-cruz, .tb-punto").forEach(x => x.setAttribute("visibility", "hidden"));
+  if (!r) { tip.style.display = "none"; return; }
+  tip.innerHTML = r.dataset.tip; tip.style.display = "block";
+  const x = Math.min(innerWidth - tip.offsetWidth - 8, e.clientX + 14), y = Math.max(8, e.clientY - tip.offsetHeight - 12);
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+  if (svg && r.dataset.cx) {
+    const cruz = svg.querySelector(".tb-cruz"), punto = svg.querySelector(".tb-punto");
+    cruz.setAttribute("x1", r.dataset.cx); cruz.setAttribute("x2", r.dataset.cx); cruz.setAttribute("visibility", "visible");
+    punto.setAttribute("cx", r.dataset.cx); punto.setAttribute("cy", r.dataset.cy); punto.setAttribute("visibility", "visible");
+  }
+}
+cuerpoTablero.addEventListener("pointermove", mostrarTip);
+cuerpoTablero.addEventListener("pointerdown", mostrarTip);
+cuerpoTablero.addEventListener("pointerleave", e => { if (e.pointerType !== "touch") ocultarTip(); });
+capaTablero.addEventListener("scroll", ocultarTip);
+
+// El tablero en la pantalla grande de la pared (dibujado en el lienzo, alterna con las diapositivas)
+function dibujarTablero(g, W, H, avance) {
+  const s = W / 1600, T = ((window.PANEL || {}).datos || {}).tablero || {}, C = T.caja || {}, P = C.periodos;
+  g.fillStyle = "#0d0d0d"; g.fillRect(0, 0, W, H); g.textBaseline = "middle"; g.textAlign = "left";
+  g.fillStyle = "#f0efec"; g.font = `650 ${50 * s}px Segoe UI, Arial`; g.fillText("📊 Tablero", 48 * s, 70 * s);
+  g.fillStyle = "#898781"; g.font = `500 ${26 * s}px Segoe UI, Arial`; g.textAlign = "right";
+  g.fillText(new Date().toLocaleTimeString("es-CR", HORA), W - 48 * s, 70 * s); g.textAlign = "left";
+  const viejos = P && (C.error || new Date(C.actualizado).toLocaleDateString("en-CA", { timeZone: "America/Costa_Rica" }) !== new Date().toLocaleDateString("en-CA", { timeZone: "America/Costa_Rica" }));
+  if (viejos) { g.fillStyle = "#fab219"; g.font = `600 ${24 * s}px Segoe UI, Arial`; g.fillText(`⚠ Caja: datos del ${new Date(C.actualizado).toLocaleDateString("es-CR", { day: "numeric", month: "short" })}`, 330 * s, 72 * s); }
+  const fichas = P ? [[P.hoy.fecha ? "Último día cerrado" : P.hoy.parcial ? P.hoy.titulo : "Ventas de hoy", colon(P.hoy.ventas)], ["Esta semana", colonCorto(P.semana.ventas)], ["Este mes", colonCorto(P.mes.ventas)], ["Pedidos por empacar", String(T.pedidos_total ?? "—")]]
+                   : [["Pedidos por empacar", String(T.pedidos_total ?? "—")], ["Impresas hoy", String(T.impresas_hoy ?? 0)], ["Sin código", String((T.codigos || {}).sin_codigo ?? "—")], ["Último pago CNP", T.ultimo_pago ? colonCorto(T.ultimo_pago.monto) : "—"]];
+  const fw = (W - 96 * s - 3 * 24 * s) / 4;
+  fichas.forEach(([k, v], i) => {
+    const x = 48 * s + i * (fw + 24 * s), y = 130 * s;
+    g.fillStyle = "#1a1a19"; g.beginPath(); g.roundRect(x, y, fw, 200 * s, 22 * s); g.fill();
+    g.fillStyle = "#c3c2b7"; g.font = `550 ${28 * s}px Segoe UI, Arial`; g.fillText(recortar(g, k, fw - 56 * s), x + 28 * s, y + 52 * s);
+    g.fillStyle = "#f0efec"; g.font = `650 ${(i === 2 && P ? 64 : 56) * s}px Segoe UI, Arial`; g.fillText(recortar(g, v, fw - 56 * s), x + 28 * s, y + 132 * s);
+  });
+  // gráfico de abajo: ventas de los últimos 30 días, o las órdenes de los últimos 14 si la caja no está conectada
+  const serie = P ? (C.serie30 || []) : (T.ordenes_dia || []);
+  const titulo = !P ? "Órdenes impresas por día · últimos 14 días" : serie.length && serie.length < 30 ? `Ventas por día · desde el ${diaCorto(serie[0][0])}` : "Ventas por día · últimos 30 días";
+  const x0 = 48 * s, y0 = 380 * s, w = W - 96 * s, h = H - y0 - 70 * s;
+  g.fillStyle = "#1a1a19"; g.beginPath(); g.roundRect(x0, y0, w, h, 22 * s); g.fill();
+  g.fillStyle = "#c3c2b7"; g.font = `550 ${28 * s}px Segoe UI, Arial`; g.fillText(titulo, x0 + 28 * s, y0 + 46 * s);
+  if (serie.length) {
+    const px = x0 + 40 * s, pw = w - 80 * s, py = y0 + 90 * s, ph = h - 130 * s, max = Math.max(...serie.map(p => p[1]), 1);
+    g.strokeStyle = "#383835"; g.lineWidth = 2 * s; g.beginPath(); g.moveTo(px, py + ph); g.lineTo(px + pw, py + ph); g.stroke();
+    if (P) {
+      const X = i => px + i * pw / Math.max(1, serie.length - 1), Y = v => py + ph - v / max * ph;
+      g.beginPath(); serie.forEach((p, i) => i ? g.lineTo(X(i), Y(p[1])) : g.moveTo(X(i), Y(p[1]))); g.lineTo(X(serie.length - 1), py + ph); g.lineTo(X(0), py + ph); g.closePath();
+      g.fillStyle = "rgba(57,135,229,.12)"; g.fill();
+      g.beginPath(); serie.forEach((p, i) => i ? g.lineTo(X(i), Y(p[1])) : g.moveTo(X(i), Y(p[1]))); g.strokeStyle = "#3987e5"; g.lineWidth = 4 * s; g.lineJoin = "round"; g.stroke();
+    } else {
+      const banda = pw / serie.length, ancho = Math.min(48 * s, banda * 0.6);
+      serie.forEach((p, i) => { const bh = p[1] / max * ph; g.fillStyle = "#3987e5"; g.beginPath(); g.roundRect(px + i * banda + (banda - ancho) / 2, py + ph - bh, ancho, bh, [8 * s, 8 * s, 0, 0]); g.fill(); });
+    }
+  }
+  g.fillStyle = "rgba(255,255,255,.1)"; g.fillRect(0, H - 10 * s, W, 10 * s);
+  g.fillStyle = "#3987e5"; g.fillRect(0, H - 10 * s, W * avance, 10 * s);
+  g.textBaseline = "alphabetic";
+}
+
+// =====================================================================================
+//  Pruebas y pendientes (botón 🧪, la pizarra de la pared u Oficina.html#pruebas): lo que Claude hizo y hay
+//  que probar, lo que te toca a vos y lo que Claude va a hacer. Sale de datos.pruebas (pruebas.json); el
+//  resultado se le cuenta a Claude en el chat. Las casillas de los pasos solo se recuerdan en este aparato.
+// =====================================================================================
+const capaPruebas = document.getElementById("pruebas"), cuerpoPruebas = document.getElementById("prCuerpo");
+const bPruebas = document.getElementById("bPruebas"), burbujaPruebas = document.getElementById("pruebasN");
+const ABIERTA = ["pendiente", "en_curso", "fallo"];
+const GRUPOS = [["probar", "🧪 Para probar", "Claude ya lo hizo: probalo y contale cómo te fue."],
+                ["te_toca", "👉 Te toca", "Cosas que tenés que hacer vos."],
+                ["voy_a_hacer", "🤖 Claude va a hacer", "Lo que viene; no tenés que hacer nada."]];
+const TEMAS = { redes: "📣 Redes", oficina: "🏢 Oficina", impresion: "🖨️ Impresión", facturacion: "🧾 Facturación", otro: "📌 Otro" };
+const QUIEN = { probar: "Probá vos", te_toca: "Te toca", voy_a_hacer: "Claude" };
+const estadoPrueba = it => it.estado === "en_curso" ? (it.tipo === "probar" ? "Probando" : "En eso")
+  : { pendiente: "Pendiente", funciono: "Funcionó ✅", fallo: "Falló ❌", hecho: "Hecho", descartado: "Descartado" }[it.estado] || String(it.estado || "");
+const PASOS = "oficina-pasos";   // localStorage: { "P3|texto del paso": 1 } (si el paso cambia de texto, queda sin marcar)
+let marcados = {};
+try { marcados = JSON.parse(localStorage.getItem(PASOS) || "{}") || {}; } catch { marcados = {}; }
+const guardarPasos = () => { try { localStorage.setItem(PASOS, JSON.stringify(marcados)); } catch { /* sin almacenamiento: solo en esta visita */ } };
+const pruebasAbierta = () => capaPruebas.style.display === "block";
+function datosPruebas() {
+  const p = ((window.PANEL || {}).datos || {}).pruebas || {};
+  return { ...p, items: (Array.isArray(p.items) ? p.items : []).filter(it => it && typeof it === "object") };
+}
+const esAbierta = it => ABIERTA.includes(it.estado);
+const esperan = PR => typeof PR.abiertas === "number" ? PR.abiertas : PR.items.filter(it => esAbierta(it) && it.tipo !== "voy_a_hacer").length;
+const numero = it => parseInt(String(it.id ?? "").replace(/\D+/g, "")) || 0;
+const tipoN = it => { const k = GRUPOS.findIndex(x => x[0] === it.tipo); return k < 0 ? GRUPOS.length : k; };   // probar, te_toca, voy_a_hacer
+const pasosDe = it => (Array.isArray(it.pasos) ? it.pasos : []).map(p => String(p ?? "")).filter(Boolean);
+function cuandoCR(s) {   // "14:05" si es de hoy; si no, "26 oct, 14:05" (hora de Costa Rica)
+  if (!s) return "—";
+  const f = fechaCR(String(s)); if (isNaN(f)) return "—";
+  const dia = x => x.toLocaleDateString("en-CA", { timeZone: "America/Costa_Rica" });
+  return dia(f) === dia(new Date()) ? f.toLocaleTimeString("es-CR", HORA) : f.toLocaleString("es-CR", { ...HORA, day: "numeric", month: "short" });
+}
+const avanceTxt = (h, n) => h >= n ? "✓ Todos los pasos listos: contale a Claude cómo te fue" : `${h} de ${n} paso${n === 1 ? "" : "s"}`;
+function tarjetaPrueba(it, cerrada) {
+  const id = String(it.id ?? ""), tipo = GRUPOS.some(g => g[0] === it.tipo) ? it.tipo : "", pasos = cerrada ? [] : pasosDe(it);
+  let h = `<article class="pr-c ${tipo} ${it.estado === "fallo" ? "fallo" : ""} ${cerrada ? "cerrada" : ""}">` +
+    `<div class="pr-arriba"><span class="pr-id">${esc(id)}</span><span class="pr-tema">${esc(TEMAS[it.tema] || it.tema || "")}</span>` +
+    `<span class="pr-est ${esc(it.estado)}">${esc(estadoPrueba(it))}</span></div><h3>${esc(it.titulo || "(sin título)")}</h3>`;
+  if (!cerrada && it.detalle) h += `<p class="pr-det">${esc(it.detalle)}</p>`;
+  if (pasos.length && tipo === "voy_a_hacer") h += `<ol class="pr-pasos plano">${pasos.map(p => `<li>${esc(p)}</li>`).join("")}</ol>`;
+  else if (pasos.length) {   // casillas para ir marcando mientras prueba
+    const k = pasos.map(p => id + "|" + p), hechos = k.filter(x => marcados[x]).length;
+    h += `<ol class="pr-pasos">${pasos.map((p, j) => `<li><label><input type="checkbox" data-k="${esc(k[j])}"${marcados[k[j]] ? " checked" : ""}><span>${esc(p)}</span></label></li>`).join("")}</ol>` +
+         `<div class="pr-avance${hechos >= pasos.length ? " listo" : ""}">${esc(avanceTxt(hechos, pasos.length))}</div>`;
+  }
+  if (it.nota) h += `<p class="pr-nota">${it.estado === "fallo" ? "<b>Qué pasó:</b> " : "💬 "}${esc(it.nota)}</p>`;
+  if (cerrada && it.actualizado) h += `<div class="pr-fecha">${esc(cuandoCR(it.actualizado))}</div>`;
+  return h + `</article>`;
+}
+function htmlPruebas(PR) {
+  const hayDatos = Object.keys(((window.PANEL || {}).datos) || {}).length > 0;
+  let h = `<div class="pr-cab"><h1 id="prTitulo">🧪 Pruebas y pendientes</h1><span>${PR.actualizado ? "Actualizado " + esc(cuandoCR(PR.actualizado)) : hayDatos ? "" : "Esperando datos…"}</span></div>` +
+    `<div class="pr-ayuda"><p>Cuando probés algo, contáselo a Claude en el chat (por ejemplo: «la P3 funcionó» o «la P3 falló porque…») y él la marca aquí.</p>` +
+    `<a href="${esc(document.getElementById("aClaude").href)}" target="_blank" rel="noopener">💬 Abrir Claude</a></div>`;
+  const abiertas = PR.items.filter(esAbierta).sort((a, b) => numero(a) - numero(b));
+  const cerradas = PR.items.filter(it => !esAbierta(it)).sort((a, b) => String(b.actualizado || "").localeCompare(String(a.actualizado || "")));
+  for (const [tipo, titulo, pista] of GRUPOS) {
+    const lista = abiertas.filter(it => it.tipo === tipo);
+    if (lista.length) h += `<h2 class="pr-sec">${titulo}<span class="pr-cuantos">${lista.length}</span></h2><p class="pr-pista">${pista}</p>` +
+                           `<div class="pr-lista">${lista.map(it => tarjetaPrueba(it, false)).join("")}</div>`;
+  }
+  const otras = abiertas.filter(it => !GRUPOS.some(g => g[0] === it.tipo));   // un tipo que esta página no conoce: igual se muestra
+  if (otras.length) h += `<h2 class="pr-sec">📌 Otras<span class="pr-cuantos">${otras.length}</span></h2><div class="pr-lista">${otras.map(it => tarjetaPrueba(it, false)).join("")}</div>`;
+  if (!abiertas.length) h += hayDatos ? `<div class="pr-vacio"><b>✅</b>Por ahora no hay nada pendiente.</div>` : `<div class="pr-vacio">Esperando datos…</div>`;
+  if (cerradas.length) h += `<details class="pr-hecho"><summary>✅ Ya quedó<span class="pr-cuantos">${cerradas.length}</span></summary>` +
+                            `<div class="pr-lista">${cerradas.map(it => tarjetaPrueba(it, true)).join("")}</div></details>`;
+  return h;
+}
+let pruebasClave = null, pruebasVisto = null;
+function pintarPruebas() {
+  const PR = datosPruebas(), clave = JSON.stringify(PR) + "|" + Object.keys(((window.PANEL || {}).datos) || {}).length;
+  if (clave !== pruebasClave) {   // la burbujita del botón (lo que espera al dueño) y la pizarra de la pared
+    pruebasClave = clave;
+    const n = esperan(PR);
+    burbujaPruebas.textContent = n > 99 ? "99+" : n; burbujaPruebas.hidden = !(n > 0);
+    bPruebas.setAttribute("aria-label", n > 0 ? `Pruebas: ${n} esperándote` : "Pruebas");
+    pintarPizarra(PR, n);
+  }
+  if (!pruebasAbierta() || clave === pruebasVisto) return;
+  // llegaron datos nuevos con la capa abierta: se vuelve a armar sin perder el lugar, "Ya quedó" abierto ni el foco
+  pruebasVisto = clave;
+  const arriba = capaPruebas.scrollTop, hechoAbierto = !!cuerpoPruebas.querySelector(".pr-hecho[open]");
+  const foco = cuerpoPruebas.contains(document.activeElement) ? document.activeElement.dataset.k : undefined;
+  cuerpoPruebas.innerHTML = htmlPruebas(PR);
+  const hecho = cuerpoPruebas.querySelector(".pr-hecho"); if (hecho) hecho.open = hechoAbierto;
+  capaPruebas.scrollTop = arriba;
+  if (foco !== undefined) [...cuerpoPruebas.querySelectorAll("input[data-k]")].find(x => x.dataset.k === foco)?.focus({ preventScroll: true });
+}
+cuerpoPruebas.addEventListener("change", e => {
+  const c = e.target; if (!c.matches || !c.matches("input[data-k]")) return;
+  if (c.checked) marcados[c.dataset.k] = 1; else delete marcados[c.dataset.k];
+  guardarPasos();
+  const t = c.closest(".pr-c"), cajas = [...t.querySelectorAll("input[data-k]")], hechos = cajas.filter(x => x.checked).length, av = t.querySelector(".pr-avance");
+  if (av) { av.textContent = avanceTxt(hechos, cajas.length); av.classList.toggle("listo", hechos >= cajas.length); }
+});
+function abrirPruebas() {
+  if (pruebasAbierta()) return;
+  capaPruebas.style.display = "block"; pruebasVisto = null; pintarPruebas(); capaPruebas.scrollTop = 0;
+  document.getElementById("barra").inert = true; capaPres.inert = true; capaTablero.inert = true;
+  document.getElementById("prCerrar").focus();
+}
+function cerrarPruebas() {
+  capaPruebas.style.display = "none"; document.getElementById("barra").inert = false; capaPres.inert = false; capaTablero.inert = false;
+  bPruebas.focus();
+  if (location.hash === "#pruebas") history.replaceState(null, "", location.pathname + location.search);
+}
+bPruebas.onclick = abrirPruebas;
+document.getElementById("prCerrar").onclick = cerrarPruebas;
+addEventListener("keydown", e => { if (e.key === "Escape" && pruebasAbierta()) cerrarPruebas(); });
+addEventListener("hashchange", () => { if (location.hash === "#pruebas") abrirPruebas(); });
+// La pizarra de la pared: una nota adhesiva por cada cosa abierta, del color de quién la tiene
+function renglones(g, texto, max, n) {
+  const ls = [];
+  for (const w of String(texto ?? "").split(/\s+/).filter(Boolean)) {
+    const u = ls[ls.length - 1];
+    if (u !== undefined && g.measureText(u + " " + w).width <= max) ls[ls.length - 1] = u + " " + w; else ls.push(w);
+  }
+  if (ls.length > n) { ls.length = n; ls[n - 1] += "…"; }
+  return ls.map(l => recortar(g, l, max));
+}
+function pintarPizarra(PR, n) {
+  // primero lo que espera al dueño (probar, te toca) y después lo de Claude: si no caben, lo suyo no queda en '+N más'
+  const { g } = pizarraTex.userData, W = 1024, H = 640, abiertas = PR.items.filter(esAbierta).sort((a, b) => tipoN(a) - tipoN(b) || numero(a) - numero(b));
+  g.fillStyle = "#f8fafc"; g.fillRect(0, 0, W, H); g.textBaseline = "middle"; g.textAlign = "left";
+  g.fillStyle = "#1f2937"; g.font = "800 50px Segoe UI, Arial"; g.fillText("🧪 Pruebas", 36, 58);
+  g.textAlign = "right"; g.font = "700 32px Segoe UI, Arial"; g.fillStyle = n ? "#b91c1c" : "#15803d";
+  g.fillText(n ? `${n} esperándote` : abiertas.length ? "Claude está en eso" : "Todo al día ✅", W - 36, 60); g.textAlign = "left";
+  const cw = 300, ch = 205, gx = 26, x0 = (W - 3 * cw - 2 * gx) / 2, y0 = 118, max = abiertas.length > 6 ? 5 : 6;
+  abiertas.slice(0, max).forEach((it, j) => {
+    const x = x0 + (j % 3) * (cw + gx) + cw / 2, y = y0 + Math.floor(j / 3) * (ch + 28) + ch / 2;
+    g.save(); g.translate(x, y); g.rotate(((j * 5) % 7 - 3) * 0.007);
+    g.fillStyle = "rgba(0,0,0,.13)"; g.fillRect(-cw / 2 + 5, -ch / 2 + 7, cw, ch);
+    g.fillStyle = it.estado === "fallo" ? "#fecaca" : { probar: "#ddd6fe", te_toca: "#fde68a", voy_a_hacer: "#bfdbfe" }[it.tipo] || "#e5e7eb";
+    g.fillRect(-cw / 2, -ch / 2, cw, ch);
+    g.fillStyle = "#111827"; g.font = "800 34px Segoe UI, Arial"; g.fillText(recortar(g, it.id, 110), -cw / 2 + 18, -ch / 2 + 34);
+    g.fillStyle = "#374151"; g.font = "700 21px Segoe UI, Arial"; g.textAlign = "right";
+    g.fillText(it.estado === "fallo" ? "Falló ❌" : QUIEN[it.tipo] || "", cw / 2 - 16, -ch / 2 + 35); g.textAlign = "left";
+    g.fillStyle = "#1f2937"; g.font = "600 26px Segoe UI, Arial";
+    renglones(g, it.titulo, cw - 36, 4).forEach((l, k) => g.fillText(l, -cw / 2 + 18, -ch / 2 + 82 + k * 32));
+    g.restore();
+  });
+  if (abiertas.length > max) {   // la sexta nota dice cuántas más hay
+    const x = x0 + 2 * (cw + gx), y = y0 + ch + 28;
+    g.strokeStyle = "#94a3b8"; g.lineWidth = 3; g.setLineDash([12, 10]); g.strokeRect(x, y, cw, ch); g.setLineDash([]);
+    g.fillStyle = "#475569"; g.font = "700 34px Segoe UI, Arial"; g.textAlign = "center"; g.fillText(`+${abiertas.length - max} más`, x + cw / 2, y + ch / 2); g.textAlign = "left";
+  }
+  if (!abiertas.length) { g.fillStyle = "#64748b"; g.font = "600 40px Segoe UI, Arial"; g.textAlign = "center"; g.fillText("Nada pendiente por ahora", W / 2, H / 2 + 30); g.textAlign = "left"; }
+  g.textBaseline = "alphabetic"; pizarraTex.needsUpdate = true;
+}
+
+// Globos de texto sobre los agentes (HTML, siempre legibles)
+const capa = document.getElementById("globos"), globos = {};
+function globosDe() {
+  for (const p of Object.values(gente)) {
+    let el = globos[p.id];
+    if (!el) { el = document.createElement("div"); el.className = "globo"; el.style.setProperty("--c", p.ag.color); capa.appendChild(el); globos[p.id] = el; }
+    const ver = p.estado !== "listo" || p.mostrar > performance.now();
+    if (!ver) { el.style.display = "none"; continue; }
+    const v = new THREE.Vector3(p.g.position.x, 3.15, p.g.position.z).project(camera);
+    if (v.z > 1) { el.style.display = "none"; continue; }
+    el.style.display = "block"; el.className = "globo " + p.estado;
+    el.style.left = ((v.x + 1) / 2 * innerWidth) + "px"; el.style.top = ((1 - v.y) / 2 * innerHeight) + "px";
+    const html = esc(p.tarea) + (p.detalle ? `<small>${esc(p.detalle.slice(0, 80))}</small>` : "");
+    if (el._h !== html) { el.innerHTML = html; el._h = html; }
+  }
+}
+
+// Seguir a un agente con la cámara
+let seguido = null;
+const botones = document.getElementById("botones");
+function botonesAgentes() {   // se rearman si llega un agente nuevo (por ejemplo, un agentes.js más nuevo que la página)
+  if (!window.PANEL || !PANEL.equipo || botones.childElementCount === Object.keys(PANEL.equipo).length) return;
+  botones.textContent = "";
+  for (const [id, ag] of Object.entries(PANEL.equipo)) {
+    const b = document.createElement("button"); b.textContent = ag.icono + " " + ag.nombre; b.classList.toggle("activo", seguido === id);
+    b.onclick = () => { seguido = seguido === id ? null : id; [...botones.children].forEach(x => x.classList.remove("activo")); if (seguido) b.classList.add("activo"); if (gente[id]) gente[id].mostrar = performance.now() + 8000; };
+    botones.appendChild(b);
+  }
+}
+document.getElementById("bVista").onclick = () => { seguido = null; [...botones.children].forEach(x => x.classList.remove("activo")); volarA = encuadre(VISTA); };
+document.getElementById("bPlanta").onclick = () => { seguido = null; [...botones.children].forEach(x => x.classList.remove("activo")); volarA = encuadre(VISTA_PLANTA); };
+let volarA = null;
+const ray = new THREE.Raycaster();
+let bajoEn = null;   // para no confundir girar la cámara con un clic
+renderer.domElement.addEventListener("pointerdown", e => { bajoEn = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener("click", e => {
+  if (bajoEn && Math.hypot(e.clientX - bajoEn[0], e.clientY - bajoEn[1]) > 6) return;
+  ray.setFromCamera(new THREE.Vector2(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), camera);
+  let tocado = false;
+  for (const p of Object.values(gente)) {
+    if (ray.intersectObject(p.g, true).length) { tocado = true; p.mostrar = performance.now() + 8000; seguido = p.id;
+      [...botones.children].forEach((x, i) => x.classList.toggle("activo", Object.keys(PANEL.equipo)[i] === p.id)); }
+  }
+  if (!tocado && ray.intersectObject(pizarra).length) abrirPruebas();
+  else if (!tocado && ray.intersectObjects([pantallaGrande, pantallaChica]).length) abrirPresentacion();
+  else if (!tocado && ray.intersectObject(pantallaProd).length) abrirPresentacion(diapos().findIndex(d => /^Producción/.test(d.titulo || "")));
+});
+
+// =====================================================================================
+//  Animación
+// =====================================================================================
+const reloj3 = new THREE.Clock();
+let ultimoMinuto = -1, ultimoSeg = -1;
+function cuadro() {
+  const dt = Math.min(0.05, reloj3.getDelta()), t = reloj3.elapsedTime, ahora = horaCR();
+  // luz del día
+  if (ahora.getSeconds() !== ultimoSeg) {
+    ultimoSeg = ahora.getSeconds(); pintarReloj(ahora);
+    const h = ahora.getHours() + ahora.getMinutes() / 60, noche = h < 6 || h >= 19;
+    const ang = ((h - 6) / 12) * Math.PI;  // 6:00 sale, 18:00 se pone
+    sol.position.set(CENTRO_X + Math.cos(ang) * 18, Math.max(2, Math.sin(ang) * 20), 10);
+    sol.intensity = noche ? 0.08 : 0.6 + Math.sin(Math.max(0, Math.min(Math.PI, ang))) * 1.2;
+    sol.color.set(h >= 16.5 && !noche ? "#ffc58a" : "#fff3dc");
+    hemi.intensity = noche ? 0.18 : 0.55;
+    for (const l of lamparas) { l.intensity = noche ? 9 : (h >= 17 ? 3 : 0); l.userData.foco.material.emissiveIntensity = l.intensity > 0 ? 1 : 0; }
+    // la sala de deshuese: luz de planta en el turno; fuera de turno, oscura (luces apagadas del todo)
+    const enPlanta = enTurnoPlanta();
+    focosSala.forEach(l => l.intensity = enPlanta ? 7 : 0);
+    matsSala.forEach(m => m.envMapIntensity = enPlanta ? 1 : 0.25);
+    scene.background.set(noche ? "#0b1020" : "#1a2133");
+    if (ahora.getMinutes() !== ultimoMinuto) { ultimoMinuto = ahora.getMinutes(); pintarCielo(ahora.getHours()); }
+  }
+  // luces del servidor
+  leds.forEach((l, i) => l.material.emissiveIntensity = Math.sin(t * (gente.vigilante && gente.vigilante.estado === "trabajando" ? 18 : 5) + i * 1.9) > 0 ? 1.6 : 0.1);
+  ledImp.material.emissiveIntensity = gente.impresor && gente.impresor.estado === "trabajando" ? (Math.sin(t * 10) > 0 ? 2 : 0.2) : 1;
+  // agentes
+  for (const p of Object.values(gente)) {
+    const pos = p.g.position;
+    if (p.ruta.length) andar(p, dt, t);
+    else {
+      p.espera -= dt;
+      if (p.espera <= 0) pasear(p);
+      const sentado = p.pose === "sentado";
+      p.cuerpo.position.y = sentado ? -0.36 : 0;
+      p.pi.rotation.x = p.pd.rotation.x = sentado ? -1.45 : 0;
+      const tecleando = p.estado === "trabajando" || p.haciendo === "💻";
+      p.bi.rotation.x = tecleando ? -1.1 + Math.sin(t * 16) * 0.12 : sentado ? -0.3 : Math.sin(t * 1.5 + p.fase) * 0.05;
+      p.bd.rotation.x = tecleando ? -1.1 + Math.cos(t * 16) * 0.12 : sentado ? -0.3 : -Math.sin(t * 1.5 + p.fase) * 0.05;
+      if (p.haciendo === "💤") { p.cuerpo.rotation.z = 0.35; } else p.cuerpo.rotation.z = 0;
+    }
+    girar(p, dt);
+    // ícono sobre la cabeza
+    cambiarEmoji(p.icono, p.estado === "problema" ? "❗" : p.estado === "esperando" ? "⏳" : p.estado === "trabajando" ? p.ag.icono : (p.ruta.length ? "" : p.haciendo));
+    p.icono.position.y = 2.8 + Math.sin(t * 3 + p.fase) * 0.06;
+    p.icono.material.opacity = 1;
+    if (p.estado === "problema") p.icono.scale.setScalar(0.6 + Math.abs(Math.sin(t * 5)) * 0.25); else p.icono.scale.setScalar(0.6);
+    // pantalla del escritorio
+    const pant = pantallas[p.id];
+    if (pant) { const aqui = !p.ruta.length && p.pose === "sentado" && p.haciendo !== "💤" && Math.hypot(pos.x - ESCRITORIOS[p.id][0], pos.z - ESCRITORIOS[p.id][1] - 0.95) < 0.5;
+      pant.material.emissiveIntensity = aqui ? 0.95 + Math.sin(t * 6) * 0.1 : 0.45; }
+  }
+  efectosDe(t);
+  // la sala de deshuese: trabaja de 5:00 a 18:00
+  const turno = enTurnoPlanta();
+  moverCarniceros(dt, t, turno);
+  if (turno) avanzarLinea(dt); else if (linea.activa) vaciarLinea();
+  moverFichas(dt, t); moverTiras(dt, t);
+  pintarPantallas(performance.now()); pintarPresentacion(performance.now());
+  // cámara
+  if (volarA) { camera.position.lerp(volarA.pos, 0.05); controls.target.lerp(volarA.mira, 0.05); if (camera.position.distanceTo(volarA.pos) < 0.05) volarA = null; }
+  if (seguido && gente[seguido]) {
+    const g = gente[seguido].g.position, mira = new THREE.Vector3(g.x, 1.2, g.z);
+    controls.target.lerp(mira, 0.08);
+    const quiero = mira.clone().add(new THREE.Vector3(4.5, 5, 6)); camera.position.lerp(quiero, 0.03);
+  }
+  if (!presAbierta && capaTablero.style.display !== "block" && !pruebasAbierta()) {   // con una capa a pantalla completa no se dibuja la oficina
+    controls.update();
+    renderer.render(scene, camera);
+    globosDe();
+  }
+  requestAnimationFrame(cuadro);
+}
+
+// Arranque
+aplicar(); botonesAgentes(); pintarMonitores(); pintarCielo(horaCR().getHours());
+document.getElementById("cargando").remove();
+setInterval(() => { recargar(); botonesAgentes(); pintarMonitores(); pintarTablero(); if (enLinea) aplicar(); }, 3000);
+window.alLlegarDatos = () => { aplicar(); botonesAgentes(); pintarMonitores(); pintarTablero(); };   // puerta_pin.js avisa así
+if (location.hash === "#tablero") { abrirTablero(); addEventListener("load", () => document.getElementById("tbCerrar").focus()); }
+if (location.hash === "#pruebas") { abrirPruebas(); addEventListener("load", () => document.getElementById("prCerrar").focus()); }
+if (enClaude) claude.use("db").then(db => {
+  if (!db) { document.getElementById("estado").textContent = "No pude abrir los datos de la oficina. Volvé a cargar la página."; return; }
+  db.doc("panel/actual").onSnapshot(s => {
+    if (!s.exists) return;
+    window.PANEL = JSON.parse(JSON.stringify(s.data()));   // copia: lo que llega viene congelado
+    aplicar(); botonesAgentes(); pintarMonitores();
+  }, () => { document.getElementById("estado").textContent = "Se cortó la conexión con los datos. Volvé a cargar la página."; });
+});
+if (location.hash === "#presentacion") abrirPresentacion();
+if (modoDemo) { pasoDemo(); }
+setInterval(pasoDemo, 11000);
+cuadro();
+</script></body></html>
